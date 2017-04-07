@@ -15,10 +15,7 @@ public class Main {
 
         while (keepAlive) {
             try {
-                for (int i = 1; i <250; i++) {
-                    System.out.println("Sending packet with header = " + i);
-                    Thread.sleep(1000);
-                }
+                //TODO
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
