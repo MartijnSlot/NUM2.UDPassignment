@@ -1,7 +1,0 @@
-build
-/.gradle/
-/.idea/
-.gitignore
-gradlew*
-settings.gradle
-/gradle/wrapper/
