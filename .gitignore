@@ -4,4 +4,4 @@ build
 .gitignore
 gradlew*
 settings.gradle
-
+/gradle/wrapper/
