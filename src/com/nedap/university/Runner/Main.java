@@ -22,7 +22,8 @@ public class Main {
             try {
                 Server server = new Server(InetAddress.getLocalHost(), 1234);
                 server.start();
-            } catch (UnknownHostException e) {
+                Thread.sleep(5000);
+            } catch (UnknownHostException | InterruptedException e) {
                 e.printStackTrace();
             }
         }

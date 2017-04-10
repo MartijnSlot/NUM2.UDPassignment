@@ -1,12 +1,8 @@
 package com.nedap.university.UDPFileServer;
 
-import com.nedap.university.Protocols.udp.UDPheader;
 import com.nedap.university.application.FileCompiler;
 import com.nedap.university.application.FileSplitter;
 import com.nedap.university.datalinkLayer.NetworkLayer;
-import com.sun.xml.internal.ws.api.message.Packet;
-
-import java.net.DatagramPacket;
 import java.net.InetAddress;
 
 /**
@@ -32,6 +28,7 @@ public class Server extends Thread {
     }
 
     private void init() {
-        networkLayer.sendMDNSpacket();
+        byte[] init = new byte[0];
+        networkLayer.sendPacket(init);
     }
 }

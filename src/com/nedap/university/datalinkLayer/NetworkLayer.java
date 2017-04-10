@@ -1,10 +1,5 @@
 package com.nedap.university.datalinkLayer;
 
-import com.nedap.university.Protocols.udp.UDPdata;
-import com.nedap.university.Protocols.udp.UDPheader;
-import com.sun.xml.internal.ws.api.message.Packet;
-
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
@@ -16,7 +11,6 @@ public class NetworkLayer {
 
     private DatagramSocket socket;
     private InetAddress hostName;
-    private int serverPort;
     private PacketReceiver packetReceiver;
     private PacketSender packetSender;
 
@@ -25,7 +19,6 @@ public class NetworkLayer {
      */
     public NetworkLayer(InetAddress hostName, int serverPort){
         this.hostName = hostName;
-        this.serverPort = serverPort;
         try {
             this.socket = new DatagramSocket(serverPort);
         } catch (SocketException e) {
@@ -36,16 +29,10 @@ public class NetworkLayer {
     /**
      * Send a packet through the unreliable medium
      */
-    public void sendPacket(DatagramPacket udpHeader) {
-        packetSender = new PacketSender(this, udpHeader);
+    public void sendPacket(byte[] data) {
+        packetSender = new PacketSender(data);
         packetSender.start();
     }
-
-    public void sendPacket(DatagramPacket UDPheader, DatagramPacket UDPdata) {
-        packetSender = new PacketSender(this, UDPheader, UDPdata);
-        packetSender.start();
-    }
-
 
     /**
      * Receive a packet from the unreliable medium
@@ -62,9 +49,5 @@ public class NetworkLayer {
 
     public DatagramSocket getSocket() {
         return socket;
-    }
-
-    public void sendMDNSpacket() {
-        sendPacket();
     }
 }
