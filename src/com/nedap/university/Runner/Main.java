@@ -1,6 +1,6 @@
 package com.nedap.university.Runner;
 
-import com.nedap.university.UDPFileServer.Server;
+import com.nedap.university.UDPFileServer.UDPFileServer;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -20,8 +20,8 @@ public class Main {
 
         while (keepAlive) {
             try {
-                Server server = new Server(InetAddress.getLocalHost(), 1234);
-                server.start();
+                UDPFileServer UDPFileServer = new UDPFileServer(InetAddress.getLocalHost(), 1234);
+                UDPFileServer.start();
                 Thread.sleep(5000);
             } catch (UnknownHostException | InterruptedException e) {
                 e.printStackTrace();

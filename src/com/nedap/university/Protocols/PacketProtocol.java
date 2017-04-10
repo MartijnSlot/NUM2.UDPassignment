@@ -6,4 +6,5 @@ package com.nedap.university.Protocols;
 public interface PacketProtocol {
 
     byte[] toBytes();
+    byte[] intToByteArray(int a);
 }

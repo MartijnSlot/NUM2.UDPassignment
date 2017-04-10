@@ -30,7 +30,8 @@ public class UDPheader implements PacketProtocol {
         return concat(sourcePortBytes, destPortBytes, lengthBytes, checksumBytes);
     }
 
-    private byte[] intToByteArray(int a) {
+    @Override
+    public byte[] intToByteArray(int a) {
         byte[] byteArray = new byte[4];
         byteArray[3] = (byte) (a & 0xFF);
         byteArray[2] = (byte) ((a >> 8) & 0xFF);

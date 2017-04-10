@@ -1,8 +1,9 @@
 package com.nedap.university.datalinkLayer;
 
+import com.nedap.university.UDPFileServer.UDPFileServer;
+
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
 
 /**
  * Created by martijn.slot on 07/04/2017.
@@ -13,41 +14,31 @@ public class NetworkLayer {
     private InetAddress hostName;
     private PacketReceiver packetReceiver;
     private PacketSender packetSender;
+    private UDPFileServer server;
 
     /**
      * Constructs the network layer
      */
-    public NetworkLayer(InetAddress hostName, int serverPort){
+    public NetworkLayer(UDPFileServer server, InetAddress hostName){
         this.hostName = hostName;
-        try {
-            this.socket = new DatagramSocket(serverPort);
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
+        this.server = server;
     }
 
     /**
      * Send a packet through the unreliable medium
      */
-    public void sendPacket(byte[] data) {
-        packetSender = new PacketSender(data);
+    public void sendPacket(byte[] data, int port) {
+        packetSender = new PacketSender(data, port);
         packetSender.start();
     }
 
     /**
      * Receive a packet from the unreliable medium
      * @return The content of the packet as an array of Integers, or null if no packet was received
+     * @param port
      */
-    public void receivePacket(){
-        packetReceiver = new PacketReceiver(this);
+    public void receiveMulticastPacket(int port){
+        packetReceiver = new PacketReceiver(port, server);
         packetReceiver.start();
-    }
-
-    public InetAddress getHostName() {
-        return hostName;
-    }
-
-    public DatagramSocket getSocket() {
-        return socket;
     }
 }
