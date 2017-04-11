@@ -27,7 +27,7 @@ public class UDPFileServer extends Thread {
 
     @Override
     public void run() {
-        networkLayer.receiveMulticastPacket(MULTICAST_PORT);;
+        networkLayer.receiveMulticastPacket(MULTICAST_PORT);
         init();
     }
 
@@ -40,12 +40,12 @@ public class UDPFileServer extends Thread {
         if (serverConnection == null){
             serverConnection.setInetAddress(receivePacket.getAddress());
             serverConnection.setPort(receivePacket.getPort());
+            byte[] data = createBroadcastResponse(receivePacket);
+            networkLayer.sendPacket(data, serverConnection.getPort());
         }
         if (receivePacket.getAddress() == serverConnection.getInetAddress() && receivePacket.getPort() == serverConnection.getPort()) {
-            if (receivePacket.getData().length == 8) {
-                byte[] data = createBroadcastResponse(receivePacket);
-                networkLayer.sendPacket(data, serverConnection.getPort());
-            }
+            byte[] data = createBroadcastResponse(receivePacket);
+            networkLayer.sendPacket(data, serverConnection.getPort());
         }
     }
 

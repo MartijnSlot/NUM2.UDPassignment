@@ -1,7 +1,6 @@
-package com.nedap.university.Protocols.udp;
+package com.nedap.university.protocols.udp;
 
-import com.nedap.university.Protocols.PacketProtocol;
-import com.sun.tools.javac.util.ArrayUtils;
+import com.nedap.university.protocols.PacketProtocol;
 
 /**
  * Created by martijn.slot on 07/04/2017.

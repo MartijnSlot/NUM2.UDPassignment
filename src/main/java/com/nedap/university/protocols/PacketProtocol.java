@@ -1,4 +1,4 @@
-package com.nedap.university.Protocols;
+package com.nedap.university.protocols;
 
 /**
  * Created by martijn.slot on 10/04/2017.

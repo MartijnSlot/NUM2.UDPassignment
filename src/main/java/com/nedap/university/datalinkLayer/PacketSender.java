@@ -1,6 +1,6 @@
 package com.nedap.university.datalinkLayer;
 
-import com.nedap.university.Protocols.udp.UDPheader;
+import com.nedap.university.protocols.udp.UDPheader;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -34,6 +34,7 @@ public class PacketSender extends Thread {
                 DatagramPacket sendpkt = createDataPacket(sendHeader, data);
                 System.out.println("Sending mDNS packet......");
                 multicastSocket.send(sendpkt);
+                multicastSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -48,6 +49,12 @@ public class PacketSender extends Thread {
                 e.printStackTrace();
             }
         }
+    }
+
+    private DatagramPacket createmDNSPacket(byte[] sendHeader) {
+        byte[] dataPacket = new byte[HEADER_LENGTH];
+        System.arraycopy(sendHeader, 0, dataPacket, 0, HEADER_LENGTH);
+        return new DatagramPacket(dataPacket, HEADER_LENGTH);
     }
 
     private DatagramPacket createDataPacket(byte[] sendHeader, byte[] data) {

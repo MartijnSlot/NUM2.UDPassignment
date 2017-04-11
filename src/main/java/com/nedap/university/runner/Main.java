@@ -1,4 +1,4 @@
-package com.nedap.university.Runner;
+package com.nedap.university.runner;
 
 import com.nedap.university.UDPFileServer.UDPFileServer;
 
@@ -20,7 +20,7 @@ public class Main {
 
         while (keepAlive) {
             try {
-                UDPFileServer UDPFileServer = new UDPFileServer(InetAddress.getLocalHost(), 1234);
+                UDPFileServer UDPFileServer = new UDPFileServer(InetAddress.getLocalHost());
                 UDPFileServer.start();
                 Thread.sleep(5000);
             } catch (UnknownHostException | InterruptedException e) {
