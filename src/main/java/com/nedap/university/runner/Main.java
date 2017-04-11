@@ -1,8 +1,7 @@
 package com.nedap.university.runner;
 
-import com.nedap.university.UDPFileServer.UDPFileServer;
+import com.nedap.university.udpFileServer.UDPFileServer;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class Main {
@@ -16,14 +15,22 @@ public class Main {
         running = true;
         System.out.println("Hello, Nedap University!");
 
+        UDPFileServer UDPFileServer = null;
+        try {
+            UDPFileServer = new UDPFileServer();
+            UDPFileServer.init();
+        } catch (UnknownHostException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
         initShutdownHook();
 
         while (keepAlive) {
             try {
-                UDPFileServer UDPFileServer = new UDPFileServer(InetAddress.getLocalHost());
-                UDPFileServer.start();
+                //
                 Thread.sleep(5000);
-            } catch (UnknownHostException | InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }

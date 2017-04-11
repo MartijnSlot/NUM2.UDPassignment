@@ -1,11 +1,12 @@
 package com.nedap.university.datalinkLayer;
 
-import com.nedap.university.protocols.udp.UDPheader;
+import com.nedap.university.packetTypes.mDNSPacket;
+import com.nedap.university.packetTypes.mDNSResponse;
+import com.nedap.university.protocols.LengthChecksumHeader;
 
+import javax.xml.crypto.Data;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.MulticastSocket;
+import java.net.*;
 
 
 /**
@@ -13,55 +14,58 @@ import java.net.MulticastSocket;
  */
 public class PacketSender extends Thread {
 
-    private final byte[] data;
-    private static final int HEADER_LENGTH = 8;
-    private static final int MULTICAST_PORT = 1234;
-    private static final int OWN_PORT = 1235;
-    private int checkSum = 12;
-    private int port = 1236;
+    private static final int HEADER_LENGTH = 4;
+    private int port;
+    private static final String MULTICAST_ADDRESS = "192.168.40.255";
 
-    public PacketSender(byte[] data, int port) {
-        this.data = data;
+    public PacketSender(int port) {
         this.port = port;
     }
 
     @Override
     public void run() {
-        if (data.length == 0) {
-            try {
-                MulticastSocket multicastSocket = new MulticastSocket(OWN_PORT);
-                byte[] sendHeader = new UDPheader(OWN_PORT, MULTICAST_PORT, HEADER_LENGTH, checkSum).toBytes();
-                DatagramPacket sendpkt = createDataPacket(sendHeader, data);
-                System.out.println("Sending mDNS packet......");
-                multicastSocket.send(sendpkt);
-                multicastSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                DatagramSocket datagramSocket = new DatagramSocket(OWN_PORT);
-                byte[] sendHeader = new UDPheader(OWN_PORT, port, HEADER_LENGTH, checkSum).toBytes();
-                DatagramPacket sendpkt = createDataPacket(sendHeader, data);
-                datagramSocket.send(sendpkt);
-                System.out.println("Sending UDP packet......");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            DatagramSocket datagramSocket = new DatagramSocket(port);
+            byte[] sendHeader = new LengthChecksumHeader(HEADER_LENGTH).toBytes();
+            DatagramPacket sendpkt = createDataPacket(sendHeader, sendHeader);
+            datagramSocket.send(sendpkt);
+            System.out.println("Sending UDP packet......");
+            datagramSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
     }
 
-    private DatagramPacket createmDNSPacket(byte[] sendHeader) {
-        byte[] dataPacket = new byte[HEADER_LENGTH];
-        System.arraycopy(sendHeader, 0, dataPacket, 0, HEADER_LENGTH);
-        return new DatagramPacket(dataPacket, HEADER_LENGTH);
-    }
-
-    private DatagramPacket createDataPacket(byte[] sendHeader, byte[] data) {
+    private DatagramPacket createDataPacket(byte[] sendHeader, byte[] data) throws UnknownHostException {
         byte[] dataPacket = new byte[HEADER_LENGTH + data.length];
         System.arraycopy(sendHeader, 0, dataPacket, 0, HEADER_LENGTH);
         System.arraycopy(data, 0, dataPacket, HEADER_LENGTH, data.length);
 
-        return new DatagramPacket(dataPacket, HEADER_LENGTH + data.length);
+        return new DatagramPacket(dataPacket, HEADER_LENGTH + data.length, InetAddress.getByName(MULTICAST_ADDRESS), port);
+    }
+
+    void sendMulticastPacket() {
+        try {
+            DatagramSocket multicastSocket = new MulticastSocket();
+            DatagramPacket sendpkt = new mDNSPacket(MULTICAST_ADDRESS, port).createPacket();
+            System.out.println("Sending mDNS packet......");
+            multicastSocket.send(sendpkt);
+            multicastSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void sendMulticastPacketResponse() {
+        try {
+            DatagramSocket datagramSocket = new DatagramSocket();
+            DatagramPacket sendpkt = new mDNSResponse(MULTICAST_ADDRESS, port).createPacket();
+            System.out.println("Sending mDNS response......");
+            datagramSocket.send(sendpkt);
+            datagramSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

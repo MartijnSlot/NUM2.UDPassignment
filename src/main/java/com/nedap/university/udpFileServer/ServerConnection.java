@@ -1,16 +1,16 @@
-package com.nedap.university.UDPFileServer;
+package com.nedap.university.udpFileServer;
 
 import java.net.InetAddress;
 
 /**
  * Created by martijn.slot on 10/04/2017.
  */
-public class serverConnection {
+public class ServerConnection {
 
     private int port;
     private InetAddress inetAddress;
 
-    public serverConnection(int port, InetAddress inetAddress) {
+    public ServerConnection(int port, InetAddress inetAddress) {
         this.port = port;
         this.inetAddress = inetAddress;
     }
