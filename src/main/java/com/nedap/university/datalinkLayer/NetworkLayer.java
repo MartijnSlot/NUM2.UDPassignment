@@ -3,6 +3,8 @@ package com.nedap.university.datalinkLayer;
 import com.nedap.university.packetTypes.mDNSPacket;
 import com.nedap.university.udpFileServer.UDPFileServer;
 
+import java.net.InetAddress;
+
 /**
  * Created by martijn.slot on 07/04/2017.
  */
@@ -43,9 +45,9 @@ public class NetworkLayer {
 
     }
 
-    public void sendMulticastPacketResponse(int port) {
+    public void sendMulticastPacketResponse(InetAddress packetAddress, int port) {
         packetSender = new PacketSender(port);
-        packetSender.sendMulticastPacketResponse();
+        packetSender.sendMulticastPacketResponse(packetAddress);
 
     }
 }

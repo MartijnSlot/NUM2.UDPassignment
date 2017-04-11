@@ -48,24 +48,27 @@ public class PacketSender extends Thread {
     void sendMulticastPacket() {
         try {
             DatagramSocket multicastSocket = new MulticastSocket();
-            DatagramPacket sendpkt = new mDNSPacket(MULTICAST_ADDRESS, port).createPacket();
+            DatagramPacket sendpkt = new mDNSPacket(InetAddress.getByName(MULTICAST_ADDRESS), port).createPacket();
             System.out.println("Sending mDNS packet......");
             multicastSocket.send(sendpkt);
             multicastSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
+           System.out.println("ERROR: niet zo cool ouwe, multicast packet niet verzonden.");
         }
     }
 
-    void sendMulticastPacketResponse() {
+    void sendMulticastPacketResponse(InetAddress packetAddress) {
         try {
             DatagramSocket datagramSocket = new DatagramSocket();
-            DatagramPacket sendpkt = new mDNSResponse(MULTICAST_ADDRESS, port).createPacket();
+            System.out.println(packetAddress.toString());
+            DatagramPacket sendpkt = new mDNSResponse(packetAddress, port).createPacket();
             System.out.println("Sending mDNS response......");
             datagramSocket.send(sendpkt);
             datagramSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
+            System.out.println("ERROR: niet zo cool ouwe, multicast packet Response niet verzonden.");
         }
     }
 }

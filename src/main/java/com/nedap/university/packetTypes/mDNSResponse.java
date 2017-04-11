@@ -9,22 +9,19 @@ import java.net.UnknownHostException;
  */
 public class mDNSResponse extends StandardPacket {
 
-    public mDNSResponse(String multicastAddress, int port) {
+    public mDNSResponse(InetAddress ipAddress, int sendport) {
         super();
+        address = ipAddress;
+        port = sendport;
     }
 
     @Override
     public DatagramPacket createPacket() {
+        System.out.println("mDNSResponse to: " + address + ":" + port);
         String mDNSResponse = "Is it me you are looking for?";
         byte[] dataPacket = new byte[mDNSResponse.getBytes().length];
         System.arraycopy(mDNSResponse.getBytes(), 0, dataPacket, 0, mDNSResponse.getBytes().length);
-
-        DatagramPacket dgPacket = null;
-        try {
-            dgPacket = new DatagramPacket(dataPacket, mDNSResponse.getBytes().length, InetAddress.getByName(address), port);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+        DatagramPacket dgPacket = new DatagramPacket(dataPacket, mDNSResponse.getBytes().length, address, port);
         return dgPacket;
     }
 }

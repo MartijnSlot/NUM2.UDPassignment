@@ -13,8 +13,8 @@ public class PacketReceiver extends Thread {
 
     private int port;
     private UDPFileServer server;
-    int length = 50000;
-    byte[] buffer = new byte[length];
+    private int length = 50000;
+    private byte[] buffer = new byte[length];
 
     public PacketReceiver(int port, UDPFileServer server) {
         this.port = port;
@@ -27,8 +27,7 @@ public class PacketReceiver extends Thread {
             DatagramSocket serverSocket = new DatagramSocket(port);
             boolean fileComplete = false;
 
-            System.out.printf("Listening on headers:%s:%d%n", InetAddress.getLocalHost().getHostAddress(), port);
-//            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            System.out.printf("Listening on address : %s:%d%n", InetAddress.getLocalHost().getHostAddress(), port);
 
             while(!fileComplete) {
                 byte[] receiveData;
@@ -41,21 +40,21 @@ public class PacketReceiver extends Thread {
                 InetAddress packetAddress = packet.getAddress();
                 String str = new String(receiveData, StandardCharsets.UTF_8);
 
-                System.out.printf("Received packet from: %s:%d%n", packet.getAddress(), packet.getPort());
+                System.out.printf("Received packet from : %s:%d%n", packet.getAddress().getHostAddress(), packet.getPort());
                 System.out.println("Received Packet data:" + str);
 
                 if (str.contains("Hello,")) {
-                    server.handleReceivedmDNSPacket(packetAddress, packetPort);
+                    serverSocket.close();
+                    server.handleReceivedmDNSPacket(packetAddress, port);
                     fileComplete = true;
                 }
 
                 if (str.contains("Is it me")) {
-                    server.handleReceivedmDNSResponse(receiveData, packetAddress, packetPort);
+                    serverSocket.close();
+                    server.handleReceivedmDNSResponse(packetAddress);
                     fileComplete = true;
                 }
             }
-
-            serverSocket.close();
 
         } catch (IOException e) {
             e.printStackTrace();

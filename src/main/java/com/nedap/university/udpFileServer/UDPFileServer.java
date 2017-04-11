@@ -14,44 +14,40 @@ import java.net.UnknownHostException;
 public class UDPFileServer{
 
     private static final int PORT = 1234;
-    private FileSplitter fileSplitter;
-    private FileCompiler fileCompiler;
     private NetworkLayer networkLayer;
-    private ServerConnection serverConnection;
+    private ServerConnection serverConnection = new ServerConnection(0, null);
 
 
 
     public UDPFileServer() throws UnknownHostException {
         networkLayer = new NetworkLayer(this);
-        fileCompiler = new FileCompiler();
-        fileSplitter = new FileSplitter();
     }
 
     public void init() throws InterruptedException {
-        byte[] init = new byte[0];
         networkLayer.sendMulticastPacket(PORT);
-        Thread.sleep(50);
+    }
+
+    public void setForReceive() {
         networkLayer.receivePacket(PORT);
     }
 
     public void handleReceivedPacket(DatagramPacket receivePacket) {
-        if (receivePacket.getAddress() == serverConnection.getInetAddress() && receivePacket.getPort() == serverConnection.getPort()) {
+        if (receivePacket.getAddress() == serverConnection.getInetAddress()) {
 
         }
     }
 
     public void handleReceivedmDNSPacket(InetAddress packetAddress, int packetPort) {
-            serverConnection = new ServerConnection(packetPort, packetAddress);
-            networkLayer.sendMulticastPacketResponse(PORT);
-
+        serverConnection = new ServerConnection(packetPort, packetAddress); //TODO niet trekken bij jezelf
+        networkLayer.sendMulticastPacketResponse(serverConnection.getInetAddress(), PORT);
+        networkLayer.receivePacket(PORT);
     }
 
 
-    public void handleReceivedmDNSResponse(byte[] receiveData, InetAddress packetAddress, int packetPort) {
-        if (serverConnection.getPort() == packetPort && serverConnection.getInetAddress().equals(packetAddress)) {
-            System.out.println("Coolio");
-//            byte[] data = createBroadcastResponse();
-//            networkLayer.sendPacket(data, serverConnection.getPort());
+    public void handleReceivedmDNSResponse(InetAddress packetAddress) {
+        if (serverConnection.getInetAddress().equals(packetAddress)) {
+            networkLayer.receivePacket(serverConnection.getPort());
+            networkLayer.receivePacket(PORT);
         }
 
     }

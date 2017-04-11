@@ -5,8 +5,7 @@ import java.net.DatagramPacket;
 /**
  * Created by martijn.slot on 11/04/2017.
  */
-public class ListQueryResponse  extends StandardPacket {
-
+public class FileContentQuery extends StandardPacket {
     @Override
     public DatagramPacket createPacket() {
         return null;

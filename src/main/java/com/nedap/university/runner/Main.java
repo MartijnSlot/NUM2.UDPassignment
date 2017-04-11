@@ -28,7 +28,7 @@ public class Main {
 
         while (keepAlive) {
             try {
-                //
+                UDPFileServer.setForReceive();
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
