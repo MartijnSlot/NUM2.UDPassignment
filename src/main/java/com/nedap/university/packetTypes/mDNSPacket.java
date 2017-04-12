@@ -1,8 +1,6 @@
 package com.nedap.university.packetTypes;
 
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import com.nedap.university.header.StandardHeader;
 
 /**
  * Created by martijn.slot on 11/04/2017.
@@ -16,9 +14,10 @@ public class mDNSPacket extends StandardPacket {
     @Override
     public byte[] createPacket() {
         data = "Hello,".getBytes();
-//        header =
-        byte[] dataPacket = new byte[data.length];
-        System.arraycopy(data, 0, dataPacket, 0, data.length);
+        header = new StandardHeader().toBytes();
+        byte[] dataPacket = new byte[data.length + header.length];
+        System.arraycopy(header, 0, dataPacket, 0, header.length);
+        System.arraycopy(data, 0, dataPacket, header.length, data.length);
 
         return dataPacket;
     }

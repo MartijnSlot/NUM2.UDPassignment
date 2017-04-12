@@ -7,18 +7,21 @@ import java.util.Arrays;
 /**
  * Created by martijn.slot on 07/04/2017.
  */
-public class FlagChecksum extends HeaderInterface {
+public class StandardHeader {
 
-    public FlagChecksum() {
+    byte[] checkSum;
+    byte[] length;
+    byte[] sequenceNumber;
+    byte[] flags = new byte[1];
+
+    public StandardHeader() {
         super();
     }
 
-    @Override
     public byte[] toBytes() {
-        return concat(flags, length, checkSum);
+        return concat(flags, length, sequenceNumber, checkSum);
     }
 
-    @Override
     public byte[] intToByteArray(int a) {
         byte[] ret = new byte[4];
         ret[0] = (byte) (a & 0xFF);
@@ -28,32 +31,41 @@ public class FlagChecksum extends HeaderInterface {
         return ret;
     }
 
-    @Override
-    byte[] setChecksum(byte[] data) {
+    void setChecksum(byte[] data) {
         MessageDigest md = null;
         try {
             md = MessageDigest.getInstance("MD5");
+            byte[] thedigest = md.digest(data);
+            checkSum = Arrays.copyOfRange(thedigest, 0, 4);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        byte[] thedigest = md.digest(data);
-        return Arrays.copyOfRange(thedigest, 0, 4);
     }
 
-    @Override
-    byte[] setFlags(byte[] a) {
-        return flags;
+    void setLength(int a) {
+        length = intToByteArray(a);
     }
 
-    private byte[] concat(byte[] flag, byte[] length, byte[] checksum) {
+    void setFlags(String a) {
+        byte flag = Byte.parseByte(a, 2);
+        flags[0] = flag;
+    }
+
+    void setSequenceNumber(int a) {
+        sequenceNumber = intToByteArray(a);
+    }
+
+    private byte[] concat(byte[] flag, byte[] length, byte[] sequenceNumber, byte[] checksum) {
         int fLen = flag.length;
         int lLen = length.length;
+        int snLen = sequenceNumber.length;
         int csLen = checkSum.length;
 
-        byte[] header = new byte[fLen + + lLen + csLen];
+        byte[] header = new byte[fLen + lLen + snLen + csLen];
         System.arraycopy(flag, 0, header, 0, fLen);
         System.arraycopy(length, 0, header, fLen, lLen);
-        System.arraycopy(checksum, 0, header, lLen, csLen);
+        System.arraycopy(sequenceNumber, 0, header, fLen + lLen, snLen);
+        System.arraycopy(checksum, 0, header, fLen + lLen + snLen, csLen);
         return header;
     }
 }
