@@ -7,7 +7,7 @@ import java.net.DatagramPacket;
  */
 public class DataPacket extends StandardPacket {
     @Override
-    public DatagramPacket createPacket() {
+    public byte[] createPacket() {
         return null;
     }
 }

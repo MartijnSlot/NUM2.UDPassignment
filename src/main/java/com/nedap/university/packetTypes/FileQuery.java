@@ -7,7 +7,7 @@ import java.net.DatagramPacket;
  */
 public class FileQuery extends StandardPacket {
     @Override
-    public DatagramPacket createPacket() {
+    public byte[] createPacket() {
         return null;
     }
 }

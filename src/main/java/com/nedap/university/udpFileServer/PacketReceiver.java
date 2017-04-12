@@ -1,37 +1,37 @@
-package com.nedap.university.datalinkLayer;
+package com.nedap.university.udpFileServer;
 
 import com.nedap.university.udpFileServer.UDPFileServer;
 
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Enumeration;
 
 /**
  * Created by martijn.slot on 10/04/2017.
  */
 public class PacketReceiver extends Thread {
 
-    private int port;
-    private UDPFileServer server;
+    private final UDPFileServer server;
+    private DatagramSocket serverSocket;
     private int length = 50000;
     private byte[] buffer = new byte[length];
 
-    public PacketReceiver(int port, UDPFileServer server) {
-        this.port = port;
+    public PacketReceiver(UDPFileServer server, DatagramSocket serverSocket) {
         this.server = server;
+        this.serverSocket = serverSocket;
     }
 
     @Override
     public void run() {
         try {
-            DatagramSocket serverSocket = new DatagramSocket(port);
-            boolean fileComplete = false;
 
-            System.out.printf("Listening on address : %s:%d%n", InetAddress.getLocalHost().getHostAddress(), port);
+            System.out.printf("Listening on address : %s:%d%n", server.localhost, server.PORT);
 
-            while(!fileComplete) {
+            while(serverSocket != null) {
                 byte[] receiveData;
                 DatagramPacket packet = new DatagramPacket(buffer, length);
+                System.out.printf("Waiting for next packet on : %s:%d%n", server.localhost.getHostAddress(), server.PORT);
                 serverSocket.receive(packet);
                 receiveData = new byte[packet.getLength()];
                 System.arraycopy(packet.getData(), packet.getOffset(), receiveData, 0, packet.getLength());
@@ -40,24 +40,21 @@ public class PacketReceiver extends Thread {
                 InetAddress packetAddress = packet.getAddress();
                 String str = new String(receiveData, StandardCharsets.UTF_8);
 
-                System.out.printf("Received packet from : %s:%d%n", packet.getAddress().getHostAddress(), packet.getPort());
-                System.out.println("Received Packet data:" + str);
+                System.out.printf("Received packet from : %s:%d%n", packetAddress.getHostAddress(), packetPort);
+                System.out.println("Received Packet containing String: " + str);
 
-                if (str.contains("Hello,")) {
-                    serverSocket.close();
-                    server.handleReceivedmDNSPacket(packetAddress, port);
-                    fileComplete = true;
+                if (str.contains("Hello,") && !packetAddress.equals(server.localhost)) {
+                    server.handleReceivedmDNSPacket(packetAddress);
                 }
 
                 if (str.contains("Is it me")) {
-                    serverSocket.close();
                     server.handleReceivedmDNSResponse(packetAddress);
-                    fileComplete = true;
                 }
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("finished!!");
     }
 }

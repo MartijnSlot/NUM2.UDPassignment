@@ -9,21 +9,17 @@ import java.net.UnknownHostException;
  */
 public class mDNSPacket extends StandardPacket {
 
-    public mDNSPacket(InetAddress address, int port) {
+    public mDNSPacket() {
         super();
-        this.address = address;
-        this.port = port;
-
     }
 
     @Override
-    public DatagramPacket createPacket() {
-        System.out.println("mDNS packet to: " + address + ":" + port);
-        String hello = "Hello,";
-        byte[] dataPacket = new byte[hello.getBytes().length];
-        System.arraycopy(hello.getBytes(), 0, dataPacket, 0, hello.getBytes().length);
+    public byte[] createPacket() {
+        data = "Hello,".getBytes();
+//        header =
+        byte[] dataPacket = new byte[data.length];
+        System.arraycopy(data, 0, dataPacket, 0, data.length);
 
-        DatagramPacket dgPacket = new DatagramPacket(dataPacket, hello.getBytes().length, address, port);
-        return dgPacket;
+        return dataPacket;
     }
 }

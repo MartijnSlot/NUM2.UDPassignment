@@ -7,9 +7,9 @@ import java.net.InetAddress;
  * Created by martijn.slot on 11/04/2017.
  */
 public abstract class StandardPacket {
-    public int port;
-    public InetAddress address;
+    public byte[] data;
+    public byte[] header;
 
-    public abstract DatagramPacket createPacket();
+    public abstract byte[] createPacket();
 
 }

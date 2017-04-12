@@ -2,8 +2,6 @@ package com.nedap.university.runner;
 
 import com.nedap.university.udpFileServer.UDPFileServer;
 
-import java.net.UnknownHostException;
-
 public class Main {
 
     private static boolean keepAlive = true;
@@ -15,21 +13,15 @@ public class Main {
         running = true;
         System.out.println("Hello, Nedap University!");
 
-        UDPFileServer UDPFileServer = null;
-        try {
-            UDPFileServer = new UDPFileServer();
-            UDPFileServer.init();
-        } catch (UnknownHostException | InterruptedException e) {
-            e.printStackTrace();
-        }
-
+        UDPFileServer UDPFileServer = new UDPFileServer();;
+        UDPFileServer.init();
 
         initShutdownHook();
 
         while (keepAlive) {
             try {
-                UDPFileServer.setForReceive();
-                Thread.sleep(5000);
+
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

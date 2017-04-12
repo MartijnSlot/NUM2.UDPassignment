@@ -1,54 +1,79 @@
 package com.nedap.university.udpFileServer;
 
-import com.nedap.university.application.FileCompiler;
-import com.nedap.university.application.FileSplitter;
-import com.nedap.university.datalinkLayer.NetworkLayer;
-
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.IOException;
+import java.net.*;
+import java.util.Enumeration;
 
 /**
  * Created by martijn.slot on 10/04/2017.
  */
 public class UDPFileServer{
 
-    private static final int PORT = 1234;
-    private NetworkLayer networkLayer;
-    private ServerConnection serverConnection = new ServerConnection(0, null);
+
+    private PacketReceiver packetReceiver;
+    private PacketSender packetSender;
+    private DatagramSocket serverSocket;
+    final InetAddress localhost;
+    static final int PORT = 1234;
+    InetAddress externalhost;
 
 
+    public UDPFileServer() {
+        localhost = getLocalAddress();
 
-    public UDPFileServer() throws UnknownHostException {
-        networkLayer = new NetworkLayer(this);
     }
 
-    public void init() throws InterruptedException {
-        networkLayer.sendMulticastPacket(PORT);
-    }
-
-    public void setForReceive() {
-        networkLayer.receivePacket(PORT);
-    }
-
-    public void handleReceivedPacket(DatagramPacket receivePacket) {
-        if (receivePacket.getAddress() == serverConnection.getInetAddress()) {
-
+    public void init() {
+        try {
+            serverSocket = new DatagramSocket(PORT);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        packetReceiver = new PacketReceiver(this, serverSocket);
+        packetSender = new PacketSender(this, serverSocket);
+        packetReceiver.start();
+        packetSender.start();
+
+        try {
+            packetReceiver.join();
+            System.out.println("packetReceiver joined");
+            packetSender.join();
+            System.out.println("PacketSender joined");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("uit de while loop");
     }
 
-    public void handleReceivedmDNSPacket(InetAddress packetAddress, int packetPort) {
-        serverConnection = new ServerConnection(packetPort, packetAddress); //TODO niet trekken bij jezelf
-        networkLayer.sendMulticastPacketResponse(serverConnection.getInetAddress(), PORT);
-        networkLayer.receivePacket(PORT);
+
+    public void handleReceivedmDNSPacket(InetAddress packetAddress) {
+        externalhost = packetAddress;
+        packetSender.setMulticastAcked(true);
     }
 
 
     public void handleReceivedmDNSResponse(InetAddress packetAddress) {
-        if (serverConnection.getInetAddress().equals(packetAddress)) {
-            networkLayer.receivePacket(serverConnection.getPort());
-            networkLayer.receivePacket(PORT);
+        if (!localhost.equals(packetAddress)) {
+            externalhost = packetAddress;
+            System.out.println("multicastAcked");
+            packetSender.setMulticastAcked(true);
         }
-
     }
+
+
+    private static InetAddress getLocalAddress(){
+        try {
+            Enumeration<NetworkInterface> b = NetworkInterface.getNetworkInterfaces();
+            while( b.hasMoreElements()){
+                for ( InterfaceAddress f : b.nextElement().getInterfaceAddresses())
+                    if ( f.getAddress().isSiteLocalAddress() && f.getAddress().getHostAddress().startsWith("192"))
+                        return f.getAddress();
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }
