@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.*;
 import java.util.Enumeration;
 
+
 /**
  * Created by martijn.slot on 10/04/2017.
  */
@@ -29,6 +30,7 @@ public class UDPFileServer{
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         packetReceiver = new PacketReceiver(this, serverSocket);
         packetSender = new PacketSender(this, serverSocket);
         packetReceiver.start();
@@ -60,6 +62,8 @@ public class UDPFileServer{
             packetSender.setMulticastAcked(true);
         }
     }
+
+
 
 
     private static InetAddress getLocalAddress(){
