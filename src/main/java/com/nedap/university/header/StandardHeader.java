@@ -9,6 +9,7 @@ import java.util.Arrays;
  */
 public class StandardHeader {
 
+    private static final int HEADER_LENGTH = 13;
     byte[] checkSum;
     byte[] length;
     byte[] sequenceNumber;
@@ -31,7 +32,7 @@ public class StandardHeader {
         return ret;
     }
 
-    void setChecksum(byte[] data) {
+    public void setChecksum(byte[] data) {
         MessageDigest md = null;
         try {
             md = MessageDigest.getInstance("MD5");
@@ -42,16 +43,16 @@ public class StandardHeader {
         }
     }
 
-    void setLength(int a) {
-        length = intToByteArray(a);
+    public void setLength(int a) {
+        length = intToByteArray(HEADER_LENGTH + a);
     }
 
-    void setFlags(String a) {
+    public void setFlags(String a) {
         byte flag = Byte.parseByte(a, 2);
         flags[0] = flag;
     }
 
-    void setSequenceNumber(int a) {
+    public void setSequenceNumber(int a) {
         sequenceNumber = intToByteArray(a);
     }
 

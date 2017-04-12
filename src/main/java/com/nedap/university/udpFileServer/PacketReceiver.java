@@ -5,6 +5,7 @@ import com.nedap.university.udpFileServer.UDPFileServer;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Enumeration;
 
 /**
@@ -12,6 +13,7 @@ import java.util.Enumeration;
  */
 public class PacketReceiver extends Thread {
 
+    private static final int HEADER_SIZE = 13;
     private final UDPFileServer server;
     private DatagramSocket serverSocket;
     private int length = 50000;
@@ -33,6 +35,7 @@ public class PacketReceiver extends Thread {
                 DatagramPacket packet = new DatagramPacket(buffer, length);
                 System.out.printf("Waiting for next packet on : %s:%d%n", server.localhost.getHostAddress(), server.PORT);
                 serverSocket.receive(packet);
+
                 receiveData = new byte[packet.getLength()];
                 System.arraycopy(packet.getData(), packet.getOffset(), receiveData, 0, packet.getLength());
 
@@ -43,18 +46,18 @@ public class PacketReceiver extends Thread {
                 System.out.printf("Received packet from : %s:%d%n", packetAddress.getHostAddress(), packetPort);
                 System.out.println("Received Packet containing String: " + str);
 
-                if (str.contains("Hello,") && !packetAddress.equals(server.localhost)) {
-                    server.handleReceivedmDNSPacket(packetAddress);
-                }
+                extractHeader(receiveData, packetAddress);
 
-                if (str.contains("Is it me")) {
-                    server.handleReceivedmDNSResponse(packetAddress);
-                }
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println("finished!!");
+    }
+
+    private void extractHeader(byte[] receiveData, InetAddress packetAddress) {
+        byte[] packetHeader = Arrays.copyOfRange(receiveData, 0, HEADER_SIZE-1);
+        server.handleReceivedPacket(packetHeader, packetAddress);
     }
 }
