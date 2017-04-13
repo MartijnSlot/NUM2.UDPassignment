@@ -1,5 +1,7 @@
 package com.nedap.university.header;
 
+import com.nedap.university.udpFileServer.UDPFileServer;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -9,7 +11,6 @@ import java.util.Arrays;
  */
 public class StandardHeader {
 
-    private static final int HEADER_LENGTH = 13;
     byte[] checkSum;
     byte[] length;
     byte[] sequenceNumber;
@@ -25,10 +26,10 @@ public class StandardHeader {
 
     public byte[] intToByteArray(int a) {
         byte[] ret = new byte[4];
-        ret[0] = (byte) (a & 0xFF);
-        ret[1] = (byte) ((a >> 8) & 0xFF);
-        ret[2] = (byte) ((a >> 16) & 0xFF);
-        ret[3] = (byte) ((a >> 24) & 0xFF);
+        ret[3] = (byte) (a & 0xFF);
+        ret[2] = (byte) ((a >> 8) & 0xFF);
+        ret[1] = (byte) ((a >> 16) & 0xFF);
+        ret[0] = (byte) ((a >> 24) & 0xFF);
         return ret;
     }
 
@@ -39,12 +40,12 @@ public class StandardHeader {
             byte[] thedigest = md.digest(data);
             checkSum = Arrays.copyOfRange(thedigest, 0, 4);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            System.out.println("Checksum failed to compose!");
         }
     }
 
     public void setLength(int a) {
-        length = intToByteArray(HEADER_LENGTH + a);
+        length = intToByteArray(UDPFileServer.getHeaderLength() + a);
     }
 
     public void setFlags(String a) {
@@ -56,7 +57,7 @@ public class StandardHeader {
         sequenceNumber = intToByteArray(a);
     }
 
-    private byte[] concat(byte[] flag, byte[] length, byte[] sequenceNumber, byte[] checksum) {
+    private byte[] concat(byte[] flag, byte[] length, byte[] sequenceNumber, byte[] checkSum) {
         int fLen = flag.length;
         int lLen = length.length;
         int snLen = sequenceNumber.length;
@@ -66,7 +67,7 @@ public class StandardHeader {
         System.arraycopy(flag, 0, header, 0, fLen);
         System.arraycopy(length, 0, header, fLen, lLen);
         System.arraycopy(sequenceNumber, 0, header, fLen + lLen, snLen);
-        System.arraycopy(checksum, 0, header, fLen + lLen + snLen, csLen);
+        System.arraycopy(checkSum, 0, header, fLen + lLen + snLen, csLen);
         return header;
     }
 }

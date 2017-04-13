@@ -13,7 +13,6 @@ import java.util.Enumeration;
  */
 public class PacketReceiver extends Thread {
 
-    private static final int HEADER_SIZE = 13;
     private final UDPFileServer server;
     private DatagramSocket serverSocket;
     private int length = 50000;
@@ -41,12 +40,10 @@ public class PacketReceiver extends Thread {
 
                 int packetPort = packet.getPort();
                 InetAddress packetAddress = packet.getAddress();
-                String str = new String(receiveData, StandardCharsets.UTF_8);
 
                 System.out.printf("Received packet from : %s:%d%n", packetAddress.getHostAddress(), packetPort);
-                System.out.println("Received Packet containing String: " + str);
 
-                extractHeader(receiveData, packetAddress);
+                server.handleReceivedPacket(receiveData, packetAddress);
 
             }
 
@@ -54,10 +51,5 @@ public class PacketReceiver extends Thread {
             e.printStackTrace();
         }
         System.out.println("finished!!");
-    }
-
-    private void extractHeader(byte[] receiveData, InetAddress packetAddress) {
-        byte[] packetHeader = Arrays.copyOfRange(receiveData, 0, HEADER_SIZE-1);
-        server.handleReceivedPacket(packetHeader, packetAddress);
     }
 }

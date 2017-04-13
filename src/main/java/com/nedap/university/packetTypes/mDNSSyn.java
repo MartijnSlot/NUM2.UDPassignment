@@ -5,9 +5,9 @@ import com.nedap.university.header.StandardHeader;
 /**
  * Created by martijn.slot on 11/04/2017.
  */
-public class mDNSPacket extends StandardPacket {
+public class mDNSSyn extends StandardPacket {
 
-    public mDNSPacket() {
+    public mDNSSyn() {
         super();
     }
 
@@ -15,12 +15,12 @@ public class mDNSPacket extends StandardPacket {
     public byte[] createPacket() {
         data = "Hello,".getBytes();
 
-        StandardHeader sh = new StandardHeader();
-        sh.setFlags("00000001");
-        sh.setLength(data.length);
-        sh.setSequenceNumber(1);
-        sh.setChecksum(data);
-        header = sh.toBytes();
+        StandardHeader mDNSheader = new StandardHeader();
+        mDNSheader.setFlags("00000001");
+        mDNSheader.setLength(data.length);
+        mDNSheader.setSequenceNumber(1);
+        mDNSheader.setChecksum(data);
+        header = mDNSheader.toBytes();
 
 
         byte[] dataPacket = new byte[data.length + header.length];
