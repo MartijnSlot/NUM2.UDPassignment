@@ -1,5 +1,7 @@
 package com.nedap.university.udpFileServer;
 
+import com.nedap.university.udpFileServer.console.Command;
+import com.nedap.university.udpFileServer.console.consoleInput;
 import com.nedap.university.udpFileServer.packetHandlers.*;
 import static com.nedap.university.udpFileServer.Flags.*;
 
@@ -54,6 +56,7 @@ public class UDPFileServer{
 
         packetReceiver = new PacketReceiver(this, zocket);
         packetSender = new PacketSender(this, zocket);
+        packetSender.setMulticast(true);
         packetReceiver.start();
         packetSender.start();
 
@@ -152,21 +155,27 @@ public class UDPFileServer{
     public void waitForInput() {
         String fromPlayer;
         try {
-            System.out.println("\nEnter the following commands: \n-- ls -- Retreive local list of files \n-- ls -pi --  Send fileQuery to pi \n" +
-                    "-- upload  'fileID' -- Upload file with fileID \n-- download 'fileID' -- Download file with fileID\n");
+            System.out.println("\nEnter the following commands: \n" +
+                    "-- ls --                Retrieve local list of files \n" +
+                    "-- ls-pi --             Send fileQuery to pi \n" +
+                    "-- upload  'fileID' --  Upload file with fileID \n" +
+                    "-- download 'fileID' -- Download file with fileID\n");
             fromPlayer = humanInput.readLine();
             if (fromPlayer != null) {
-                if (fromPlayer.startsWith("ls")) {
-                    System.out.println("Sending file query request");
-                }
+                consoleInput consoleInput = new consoleInput();
+                Command command = consoleInput.input(fromPlayer, this);
+                command.execute();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Unable to readline while waiting for input.");
         }
     }
 
     public void establishConnex() {
+        System.out.println("Established connection!");
+        packetSender.setMulticast(false);
         packetSender.setMulticastAck(false);
+        packetSender.setFinishedSending(true);
         waitForInput();
     }
 }

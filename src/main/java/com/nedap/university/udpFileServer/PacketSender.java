@@ -15,9 +15,10 @@ public class PacketSender extends Thread {
     private final DatagramSocket socket;
     private final UDPFileServer server;
     private static final String MULTICAST_ADDRESS = "192.168.40.255";
-    private boolean multicast = true;
+    private boolean multicast;
     private boolean multicastAck;
-    private int sleeptimer = 5000;
+    private boolean finishedSending = false;
+    private int sleeptimer = 3000;
 
     public PacketSender(UDPFileServer server, DatagramSocket serverSocket) {
         this.server = server;
@@ -27,7 +28,7 @@ public class PacketSender extends Thread {
     @Override
     public void run() {
 
-        while(socket != null) {
+        while(socket != null && !finishedSending) {
 
             if (multicast) {
                 sendMulticastPacket();
@@ -80,6 +81,10 @@ public class PacketSender extends Thread {
 
     void setMulticast(boolean multicast) {
         this.multicast = multicast;
+    }
+
+    public void setFinishedSending(boolean finishedSending) {
+        this.finishedSending = finishedSending;
     }
 }
 
