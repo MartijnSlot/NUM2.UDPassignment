@@ -8,7 +8,7 @@ import java.net.DatagramPacket;
 public class DataPacketACK extends StandardPacket {
 
     @Override
-    public byte[] createPacket() {
-        return null;
+    public byte[] createPacket(byte[] data) {
+        return new byte[0];
     }
 }

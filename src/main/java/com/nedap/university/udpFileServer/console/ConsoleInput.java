@@ -2,24 +2,26 @@ package com.nedap.university.udpFileServer.console;
 
 import com.nedap.university.udpFileServer.UDPFileServer;
 
+import java.net.DatagramSocket;
+
 /**
  * Created by martijn.slot on 13/04/2017.
  */
-public class consoleInput implements consoleCommands {
+public class ConsoleInput implements ConsoleCommands {
 
-    public consoleInput() {
+    public ConsoleInput() {
 
     }
 
-    public Command input(String message, UDPFileServer server) {
+    public Command input(String message, UDPFileServer server, DatagramSocket socket) {
         Command command;
         String[] splitMessage = message.split(DELIMITER);
         switch (splitMessage[0]) {
             case LS:
-                command = new LSCommand(splitMessage[0], server);
+                command = new LSCommand(server);
                 break;
             case LSPI:
-                command = new LSPICommand(splitMessage[0], server);
+                command = new LSPICommand(server, socket);
                 break;
             case UPLOAD:
                 command = new UploadCommand(splitMessage[0], server);

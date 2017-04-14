@@ -7,12 +7,14 @@ import com.nedap.university.udpFileServer.UDPFileServer;
  */
 public class LSCommand extends Command {
 
-    public LSCommand(String s, UDPFileServer server) {
+    public LSCommand(UDPFileServer server) {
         super();
+        this.server = server;
     }
 
     @Override
     public void execute() {
-
+        server.printFiles(server.getFiles());
+        server.waitForInput();
     }
 }

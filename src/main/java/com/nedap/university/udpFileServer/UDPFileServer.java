@@ -1,11 +1,13 @@
 package com.nedap.university.udpFileServer;
 
-import com.nedap.university.udpFileServer.console.Command;
-import com.nedap.university.udpFileServer.console.consoleInput;
-import com.nedap.university.udpFileServer.packetHandlers.*;
+import com.nedap.university.udpFileServer.console.*;
+import com.nedap.university.udpFileServer.incomingPacketHandlers.*;
+import com.nedap.university.udpFileServer.dataHandlers.*;
+
 import static com.nedap.university.udpFileServer.Flags.*;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
@@ -20,19 +22,19 @@ import java.util.Map;
 /**
  * Created by martijn.slot on 10/04/2017.
  */
-public class UDPFileServer{
+public class UDPFileServer {
 
 
     private PacketReceiver packetReceiver;
     private PacketSender packetSender;
     private DatagramSocket zocket;
-    final InetAddress localhost;
-    static final int PORT = 1234;
-    private static final int HEADER_LENGTH = 13;
     public InetAddress externalhost;
     private Map<Byte, Flags> allPackets = new HashMap<>();
     private BufferedReader humanInput;
-
+    private static final String FILE_PATH = "src/main/resources";
+    private static final int HEADER_LENGTH = 13;
+    static final int PORT = 1234;
+    final InetAddress localhost;
 
     public UDPFileServer() {
         localhost = getLocalAddress();
@@ -75,11 +77,10 @@ public class UDPFileServer{
     private void setUpAllPackets() {
         allPackets.put(Byte.parseByte("00000001", 2), MDNS); //int 1
         allPackets.put(Byte.parseByte("00100001", 2), MDNS_ACK); //int 33
-        allPackets.put(Byte.parseByte("01100001", 2), MDNS_ACK_FIN); //int 33
-        allPackets.put(Byte.parseByte("00000010", 2), FILECONTENTQUERY); //int 2
-        allPackets.put(Byte.parseByte("00100010", 2), FILECONTENTQUERY_ACK); //int 34
-        allPackets.put(Byte.parseByte("00000100", 2), FILEQUERY); //int 4
-        allPackets.put(Byte.parseByte("00100100", 2), FILEQUERY_ACK); //int 36
+        allPackets.put(Byte.parseByte("00000010", 2), FILE_QUERY); //int 2
+        allPackets.put(Byte.parseByte("00100010", 2), FILE_QUERY_ACK); //int 34
+        allPackets.put(Byte.parseByte("00000100", 2), FILE_LIST_QUERY); //int 4
+        allPackets.put(Byte.parseByte("00100100", 2), FILE_LIST_QUERY_ACK); //int 36
         allPackets.put(Byte.parseByte("00001000", 2), DATA); //int 8
         allPackets.put(Byte.parseByte("00101000", 2), DATA_ACK); //int 40
         allPackets.put(Byte.parseByte("01101000", 2), DATA_ACK_FIN); //int 104
@@ -87,49 +88,46 @@ public class UDPFileServer{
 
     void handleReceivedPacket(byte[] packet, InetAddress packetAddress) {
         byte[] packetFlags = Arrays.copyOfRange(packet, 0, 1);
+        byte[] data = Arrays.copyOfRange(packet, 13, packet.length);
+        System.out.println("data length = " + data.length);
 
-        for (byte i : allPackets.keySet()){
+        for (byte i : allPackets.keySet()) {
             if (packetFlags[0] == i) {
-                determinePacket(i, packetAddress);
+                determinePacket(i, packetAddress, data);
             }
         }
     }
 
-    private void determinePacket(byte i, InetAddress packetAddress) {
+    private void determinePacket(byte i, InetAddress packetAddress, byte [] packet) {
         switch (allPackets.get(i)) {
             case MDNS:
                 if (!localhost.equals(packetAddress)) {
-                    packetSender.setMulticastAck(true);
                     packetHandler mDNShandler = new mDNSHandler();
-                    mDNShandler.start(this, packetAddress);
+                    mDNShandler.start(this, packetAddress, packetSender, packet);
                 }
                 break;
             case MDNS_ACK:
                 if (externalhost != null) {
-                    packetSender.setMulticast(false);
                     packetHandler mDNSAckHandler = new mDNSHandler();
-                    mDNSAckHandler.start(this, packetAddress);
+                    mDNSAckHandler.start(this, packetAddress, packetSender, packet);
                 }
                 break;
-            case FILECONTENTQUERY:
-
+            case FILE_QUERY:
                 break;
-            case FILECONTENTQUERY_ACK:
-
+            case FILE_QUERY_ACK:
                 break;
-            case FILEQUERY:
-
+            case FILE_LIST_QUERY:
+                packetHandler fileListQueryHandler = new FileListQueryHandler();
+                fileListQueryHandler.start(this, packetAddress, packetSender, packet);
                 break;
-            case FILEQUERY_ACK:
-
+            case FILE_LIST_QUERY_ACK:
+                packetHandler listQueryResponseHandler = new ListQueryResponseHandler();
+                listQueryResponseHandler.start(this, packetAddress, new PacketSender(this, zocket), packet);
                 break;
             case DATA:
 
                 break;
             case DATA_ACK:
-
-                break;
-            case DATA_ACK_FIN:
 
                 break;
             default:
@@ -138,12 +136,12 @@ public class UDPFileServer{
         }
     }
 
-    private static InetAddress getLocalAddress(){
+    private static InetAddress getLocalAddress() {
         try {
             Enumeration<NetworkInterface> b = NetworkInterface.getNetworkInterfaces();
-            while( b.hasMoreElements()){
-                for ( InterfaceAddress f : b.nextElement().getInterfaceAddresses())
-                    if ( f.getAddress().isSiteLocalAddress() && f.getAddress().getHostAddress().startsWith("192"))
+            while (b.hasMoreElements()) {
+                for (InterfaceAddress f : b.nextElement().getInterfaceAddresses())
+                    if (f.getAddress().isSiteLocalAddress() && f.getAddress().getHostAddress().startsWith("192"))
                         return f.getAddress();
             }
         } catch (SocketException e) {
@@ -155,15 +153,17 @@ public class UDPFileServer{
     public void waitForInput() {
         String fromPlayer;
         try {
-            System.out.println("\nEnter the following commands: \n" +
+            System.out.println("\nEnter one of the following commands: \n" +
                     "-- ls --                Retrieve local list of files \n" +
                     "-- ls-pi --             Send fileQuery to pi \n" +
                     "-- upload  'fileID' --  Upload file with fileID \n" +
                     "-- download 'fileID' -- Download file with fileID\n");
+            PacketReceiver packetReceiver = new PacketReceiver(this, zocket);
+            packetReceiver.start();
             fromPlayer = humanInput.readLine();
             if (fromPlayer != null) {
-                consoleInput consoleInput = new consoleInput();
-                Command command = consoleInput.input(fromPlayer, this);
+                ConsoleInput consoleInput = new ConsoleInput();
+                Command command = consoleInput.input(fromPlayer, this, zocket);
                 command.execute();
             }
         } catch (IOException e) {
@@ -172,10 +172,54 @@ public class UDPFileServer{
     }
 
     public void establishConnex() {
-        System.out.println("Established connection!");
+        System.out.println("Established connected!");
+        closeThreads();
+        waitForInput();
+
+
+    }
+
+    public Map<Integer, String> getFiles() {
+        File folder = new File(FILE_PATH);
+        File[] listOfFiles = folder.listFiles();
+        Map<Integer, String> fileMap = new HashMap<>();
+
+        if (listOfFiles != null) {
+            int fileIndex = 1;
+            for (File file : listOfFiles) {
+                if (file.isFile()) {
+                    fileMap.put(fileIndex, file.getName());
+                    fileIndex++;
+                }
+            }
+        }
+        return fileMap;
+    }
+
+    public void printFiles(Map<Integer, String> fileMap) {
+        System.out.println("Index: filename");
+        for (int index : fileMap.keySet()) {
+            System.out.println(index + ":     " + fileMap.get(index));
+        }
+    }
+
+    public byte[] getFileBytes(Map<Integer, String> files) {
+        try {
+            return MapToBytesAndBack.serialize(files);
+        } catch (IOException e) {
+            return new byte[0];
+        }
+    }
+
+    public DatagramSocket getSocket() {
+        return zocket;
+    }
+
+    public void closeThreads() {
         packetSender.setMulticast(false);
         packetSender.setMulticastAck(false);
         packetSender.setFinishedSending(true);
-        waitForInput();
+        packetReceiver.setFinishedReceiving(true);
     }
+
 }

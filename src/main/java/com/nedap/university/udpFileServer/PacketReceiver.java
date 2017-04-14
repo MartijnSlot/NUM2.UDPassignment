@@ -17,6 +17,7 @@ public class PacketReceiver extends Thread {
     private DatagramSocket serverSocket;
     private int length = 50000;
     private byte[] buffer = new byte[length];
+    private boolean finishedReceiving = false;
 
     public PacketReceiver(UDPFileServer server, DatagramSocket serverSocket) {
         this.server = server;
@@ -29,7 +30,7 @@ public class PacketReceiver extends Thread {
 
             System.out.printf("Listening on address : %s:%d%n", server.localhost, server.PORT);
 
-            while(serverSocket != null) {
+            while(serverSocket != null && !finishedReceiving) {
                 byte[] receiveData;
                 DatagramPacket packet = new DatagramPacket(buffer, length);
                 System.out.printf("Waiting for next packet on : %s:%d%n", server.localhost.getHostAddress(), server.PORT);
@@ -51,5 +52,9 @@ public class PacketReceiver extends Thread {
             e.printStackTrace();
         }
         System.out.println("finished!!");
+    }
+
+    public void setFinishedReceiving(boolean finishedReceiving) {
+        this.finishedReceiving = finishedReceiving;
     }
 }

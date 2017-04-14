@@ -1,5 +1,7 @@
 package com.nedap.university.packetTypes;
 
+import com.nedap.university.udpFileServer.UDPFileServer;
+
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 
@@ -10,6 +12,6 @@ public abstract class StandardPacket {
     public byte[] data;
     public byte[] header;
 
-    public abstract byte[] createPacket();
+    public abstract byte[] createPacket(byte[] data);
 
 }

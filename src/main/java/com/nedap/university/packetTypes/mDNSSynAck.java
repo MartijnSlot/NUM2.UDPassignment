@@ -16,8 +16,8 @@ public class mDNSSynAck extends StandardPacket {
     }
 
     @Override
-    public byte[] createPacket() {
-        data = "Is it me you are looking for?".getBytes();
+    public byte[] createPacket(byte[] data) {
+        this.data = data;
 
         StandardHeader mDNSResponseHeader = new StandardHeader();
         mDNSResponseHeader.setFlags("00100001");

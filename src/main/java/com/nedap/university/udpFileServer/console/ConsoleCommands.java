@@ -4,7 +4,7 @@ package com.nedap.university.udpFileServer.console;
  * Created by martijn.slot on 13/04/2017.
  */
 
-public interface consoleCommands {
+public interface ConsoleCommands {
     /**
      * ls
      *
