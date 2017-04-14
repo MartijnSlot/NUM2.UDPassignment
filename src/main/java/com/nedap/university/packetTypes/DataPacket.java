@@ -8,7 +8,7 @@ import java.net.DatagramPacket;
 public class DataPacket extends StandardPacket {
 
     @Override
-    public byte[] createPacket(byte[] data) {
+    public byte[] createPacket(byte[] data, int sequence) {
         return new byte[0];
     }
 }

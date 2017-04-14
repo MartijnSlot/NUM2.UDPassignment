@@ -25,7 +25,7 @@ public class ListQueryResponseHandler implements packetHandler {
         }
         udpFileServer.printFiles(fileList);
         try {
-            Thread.sleep(1000);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

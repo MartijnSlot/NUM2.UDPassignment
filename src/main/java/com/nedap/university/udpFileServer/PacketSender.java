@@ -1,9 +1,7 @@
 package com.nedap.university.udpFileServer;
 
-import com.nedap.university.packetTypes.FileListQuery;
-import com.nedap.university.packetTypes.FileListQueryResponse;
-import com.nedap.university.packetTypes.mDNSSyn;
-import com.nedap.university.packetTypes.mDNSSynAck;
+import com.nedap.university.application.FileSplitter;
+import com.nedap.university.packetTypes.*;
 
 import java.io.IOException;
 import java.net.*;
@@ -23,8 +21,11 @@ public class PacketSender extends Thread {
     private boolean listQueryAck = false;
     private boolean sendListQueryResponse;
     private boolean finishedSending = false;
-    private static final int INITIATION_TIMER = 400;
+    private static final int INITIATION_TIMER = 100;
     private static final int RESPONSE_TIMER = 2000;
+    private boolean sendFile;
+    public int seqNumber = 1;
+    public byte[] bytes;
 
 
     public PacketSender(UDPFileServer server, DatagramSocket serverSocket) {
@@ -47,20 +48,37 @@ public class PacketSender extends Thread {
             }
 
             if (sendListQuery && !listQueryAck) {
-                sendListQuery(1);
+                sendListQuery();
             }
 
             if (sendListQueryResponse) {
                 sendListQueryResponse();
 
             }
+
+            if (sendFile) {
+                sendFile(seqNumber);
+            }
         }
     }
 
-    private void sendListQuery(int i) {
-        for (int a = 1; a <= i; a++) {
+    private void sendFile(int seqNumber) {
             try {
-                byte[] fileListQuery = new FileListQuery().createPacket("List request".getBytes());
+                byte[] dataPacket = new DataPacket().createPacket(bytes, seqNumber);
+                DatagramPacket sendpkt = new DatagramPacket(dataPacket,
+                        dataPacket.length, server.externalhost, UDPFileServer.PORT);
+                System.out.println("Sending Datafile part : " + seqNumber);
+                socket.send(sendpkt);
+                waiting(RESPONSE_TIMER);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("ERROR: niet zo cool ouwe, list query packet niet verzonden.");
+            }
+    }
+
+    private void sendListQuery() {
+            try {
+                byte[] fileListQuery = new FileListQuery().createPacket(bytes, seqNumber);
                 DatagramPacket sendpkt = new DatagramPacket(fileListQuery,
                         fileListQuery.length, server.externalhost, UDPFileServer.PORT);
                 System.out.println("Sending File List Query......");
@@ -70,14 +88,13 @@ public class PacketSender extends Thread {
                 e.printStackTrace();
                 System.out.println("ERROR: niet zo cool ouwe, list query packet niet verzonden.");
             }
-        }
         sendListQuery = false;
     }
 
     private void sendListQueryResponse() {
         sendListQuery = false;
         try {
-            byte[] fileListQueryResponse = new FileListQueryResponse().createPacket(server.getFileBytes(server.localFiles));
+            byte[] fileListQueryResponse = new FileListQueryResponse().createPacket(server.getFileBytes(server.localFiles), seqNumber);
             DatagramPacket sendpkt = new DatagramPacket(fileListQueryResponse,
                     fileListQueryResponse.length, server.externalhost, UDPFileServer.PORT);
             System.out.println("Sending File List......");
@@ -91,7 +108,7 @@ public class PacketSender extends Thread {
 
     private void sendMulticastPacket() {
         try {
-            byte[] mDNSPacket = new mDNSSyn().createPacket("Hello,".getBytes());
+            byte[] mDNSPacket = new mDNSSyn().createPacket(bytes, seqNumber);
             DatagramPacket sendpkt = new DatagramPacket(mDNSPacket, mDNSPacket.length, InetAddress.getByName(MULTICAST_ADDRESS), UDPFileServer.PORT);
             System.out.println("Sending mDNS packet......");
             socket.send(sendpkt);
@@ -104,7 +121,7 @@ public class PacketSender extends Thread {
 
     private void sendMulticastPacketResponse() {
         try {
-            byte[] mDNSResponse = new mDNSSynAck().createPacket("Is it me you are looking for?".getBytes());
+            byte[] mDNSResponse = new mDNSSynAck().createPacket("Is it me you are looking for?".getBytes(), seqNumber);
             DatagramPacket sendpkt = new DatagramPacket(mDNSResponse, mDNSResponse.length, server.externalhost, UDPFileServer.PORT);
             System.out.println("Sending mDNS response......");
             socket.send(sendpkt);
@@ -146,6 +163,14 @@ public class PacketSender extends Thread {
 
     public void setListQueryAck(boolean listQueryAck) {
         this.listQueryAck = listQueryAck;
+    }
+
+    public void setSendFile(boolean sendFile) {
+        this.sendFile = sendFile;
+    }
+
+    public void setBytes(byte[] bytes) {
+        this.bytes = bytes;
     }
 }
 

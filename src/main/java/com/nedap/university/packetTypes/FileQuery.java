@@ -8,7 +8,7 @@ import java.net.DatagramPacket;
 public class FileQuery extends StandardPacket {
 
     @Override
-    public byte[] createPacket(byte[] data) {
+    public byte[] createPacket(byte[] data, int seqNumber) {
         return new byte[0];
     }
 }

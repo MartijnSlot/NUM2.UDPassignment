@@ -16,13 +16,13 @@ public class mDNSSynAck extends StandardPacket {
     }
 
     @Override
-    public byte[] createPacket(byte[] data) {
+    public byte[] createPacket(byte[] data, int sequenceNumber) {
         this.data = data;
 
         StandardHeader mDNSResponseHeader = new StandardHeader();
         mDNSResponseHeader.setFlags("00100001");
         mDNSResponseHeader.setLength(data.length);
-        mDNSResponseHeader.setSequenceNumber(1);
+        mDNSResponseHeader.setSequenceNumber(sequenceNumber);
         mDNSResponseHeader.setChecksum(data);
         header = mDNSResponseHeader.toBytes();
 

@@ -1,13 +1,12 @@
 package com.nedap.university.udpFileServer;
 
+import com.nedap.university.application.FileSplitter;
 import com.nedap.university.udpFileServer.console.*;
 import com.nedap.university.udpFileServer.incomingPacketHandlers.*;
 import com.nedap.university.udpFileServer.dataHandlers.*;
-
 import static com.nedap.university.udpFileServer.Flags.*;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
@@ -16,14 +15,10 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
-
-
-
 /**
  * Created by martijn.slot on 10/04/2017.
  */
 public class UDPFileServer {
-
 
     private PacketReceiver packetReceiver;
     private PacketSender packetSender;
@@ -35,7 +30,8 @@ public class UDPFileServer {
     private static final int HEADER_LENGTH = 13;
     static final int PORT = 1234;
     final InetAddress localhost;
-    Map<Integer, String> localFiles;
+    static Map<Integer, String> localFiles;
+    private FileSplitter fileSplitter;
 
     public UDPFileServer(String filePath) {
         this.filePath = filePath;
@@ -57,11 +53,14 @@ public class UDPFileServer {
         setUpAllPackets();
         localFiles = getFiles();
 
+        fileSplitter = new FileSplitter();
+
         humanInput = new BufferedReader(new InputStreamReader(System.in));
 
         packetReceiver = new PacketReceiver(this, zocket);
         packetSender = new PacketSender(this, zocket);
         packetSender.setMulticast(true);
+        packetSender.setBytes("Hello".getBytes());
         packetReceiver.start();
         packetSender.start();
 
@@ -206,11 +205,14 @@ public class UDPFileServer {
         return zocket;
     }
 
+    public static String getLocalFile(int id) {
+        return localFiles.get(id);
+    }
+
     public void closeThreads() {
         packetSender.setMulticast(false);
         packetSender.setMulticastAck(false);
         packetSender.setFinishedSending(true);
         packetReceiver.setFinishedReceiving(true);
     }
-
 }

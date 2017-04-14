@@ -10,13 +10,13 @@ import java.net.DatagramPacket;
 public class FileListQuery extends StandardPacket {
 
     @Override
-    public byte[] createPacket(byte[] data) {
+    public byte[] createPacket(byte[] data, int seqNumber) {
         this.data = data;
 
         StandardHeader mDNSheader = new StandardHeader();
         mDNSheader.setFlags("00000100");
         mDNSheader.setLength(data.length);
-        mDNSheader.setSequenceNumber(1);
+        mDNSheader.setSequenceNumber(seqNumber);
         mDNSheader.setChecksum(data);
         header = mDNSheader.toBytes();
 

@@ -12,6 +12,6 @@ public abstract class StandardPacket {
     public byte[] data;
     public byte[] header;
 
-    public abstract byte[] createPacket(byte[] data);
+    public abstract byte[] createPacket(byte[] data, int seqNumber);
 
 }

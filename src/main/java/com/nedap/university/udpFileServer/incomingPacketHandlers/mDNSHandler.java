@@ -16,14 +16,14 @@ public class mDNSHandler implements packetHandler {
             udpFileServer.externalhost = packetAddress;
             System.out.println("FOUND external host on : " + udpFileServer.externalhost.getHostAddress());
             try {
-                Thread.sleep(1000);
+                Thread.sleep(210);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         } else {
             packetSender.setMulticast(false);
             try {
-                Thread.sleep(1000);
+                Thread.sleep(210);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

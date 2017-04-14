@@ -19,6 +19,7 @@ public class LSPICommand extends Command {
     public void execute() {
         PacketSender packetSender = new PacketSender(server, socket);
         packetSender.setSendListQuery(true);
+        packetSender.setBytes("List request".getBytes());
         packetSender.start();
     }
 }
