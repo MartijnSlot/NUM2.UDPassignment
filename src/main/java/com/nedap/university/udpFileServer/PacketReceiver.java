@@ -13,6 +13,7 @@ import java.util.Enumeration;
  */
 public class PacketReceiver extends Thread {
 
+    private static final int RECIEVER_SLEEP = 50;
     private final UDPFileServer server;
     private DatagramSocket serverSocket;
     private int length = 50000;
@@ -46,12 +47,13 @@ public class PacketReceiver extends Thread {
 
                 server.handleReceivedPacket(receiveData, packetAddress);
 
+                Thread.sleep(RECIEVER_SLEEP);
+
             }
 
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("finished!!");
     }
 
     public void setFinishedReceiving(boolean finishedReceiving) {

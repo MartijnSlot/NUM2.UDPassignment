@@ -31,12 +31,14 @@ public class UDPFileServer {
     public InetAddress externalhost;
     private Map<Byte, Flags> allPackets = new HashMap<>();
     private BufferedReader humanInput;
-    private static final String FILE_PATH = "src/main/resources";
+    private final String filePath;
     private static final int HEADER_LENGTH = 13;
     static final int PORT = 1234;
     final InetAddress localhost;
+    Map<Integer, String> localFiles;
 
-    public UDPFileServer() {
+    public UDPFileServer(String filePath) {
+        this.filePath = filePath;
         localhost = getLocalAddress();
 
     }
@@ -53,6 +55,7 @@ public class UDPFileServer {
         }
 
         setUpAllPackets();
+        localFiles = getFiles();
 
         humanInput = new BufferedReader(new InputStreamReader(System.in));
 
@@ -180,27 +183,15 @@ public class UDPFileServer {
     }
 
     public Map<Integer, String> getFiles() {
-        File folder = new File(FILE_PATH);
-        File[] listOfFiles = folder.listFiles();
-        Map<Integer, String> fileMap = new HashMap<>();
-
-        if (listOfFiles != null) {
-            int fileIndex = 1;
-            for (File file : listOfFiles) {
-                if (file.isFile()) {
-                    fileMap.put(fileIndex, file.getName());
-                    fileIndex++;
-                }
-            }
-        }
-        return fileMap;
+        return GenerateFileListData.getFileMap(filePath);
     }
 
     public void printFiles(Map<Integer, String> fileMap) {
-        System.out.println("Index: filename");
+        System.out.println("\n===================\nIndex: filename");
         for (int index : fileMap.keySet()) {
             System.out.println(index + ":     " + fileMap.get(index));
         }
+        System.out.println("===================\n");
     }
 
     public byte[] getFileBytes(Map<Integer, String> files) {

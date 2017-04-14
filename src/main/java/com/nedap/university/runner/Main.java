@@ -11,9 +11,18 @@ public class Main {
 
     public static void main(String[] args) {
         running = true;
+        String filePath;
         System.out.println("Hello, Nedap University!");
 
-        UDPFileServer UDPFileServer = new UDPFileServer();;
+        if (args.length == 0) {
+            filePath = "src/main/resources";
+        } else {
+            filePath = args[0];
+        }
+        System.out.println("Resources filepath: " + filePath);
+
+
+        UDPFileServer UDPFileServer = new UDPFileServer(filePath);;
         UDPFileServer.init();
 
         initShutdownHook();

@@ -77,7 +77,7 @@ public class PacketSender extends Thread {
     private void sendListQueryResponse() {
         sendListQuery = false;
         try {
-            byte[] fileListQueryResponse = new FileListQueryResponse().createPacket(server.getFileBytes(server.getFiles()));
+            byte[] fileListQueryResponse = new FileListQueryResponse().createPacket(server.getFileBytes(server.localFiles));
             DatagramPacket sendpkt = new DatagramPacket(fileListQueryResponse,
                     fileListQueryResponse.length, server.externalhost, UDPFileServer.PORT);
             System.out.println("Sending File List......");
