@@ -1,6 +1,5 @@
 package com.nedap.university.udpFileServer;
 
-import com.nedap.university.application.FileSplitter;
 import com.nedap.university.packetTypes.*;
 
 import java.io.IOException;
@@ -24,9 +23,7 @@ public class PacketSender extends Thread {
     private static final int INITIATION_TIMER = 100;
     private static final int RESPONSE_TIMER = 2000;
     private boolean sendFile;
-    public int seqNumber = 1;
-    public byte[] bytes;
-
+    private byte[] dataPacket;
 
     public PacketSender(UDPFileServer server, DatagramSocket serverSocket) {
         this.server = server;
@@ -57,17 +54,15 @@ public class PacketSender extends Thread {
             }
 
             if (sendFile) {
-                sendFile(seqNumber);
+                sendFile(dataPacket);
             }
         }
     }
 
-    private void sendFile(int seqNumber) {
+    private void sendFile(byte [] dataPacket) {
             try {
-                byte[] dataPacket = new DataPacket().createPacket(bytes, seqNumber);
                 DatagramPacket sendpkt = new DatagramPacket(dataPacket,
                         dataPacket.length, server.externalhost, UDPFileServer.PORT);
-                System.out.println("Sending Datafile part : " + seqNumber);
                 socket.send(sendpkt);
                 waiting(RESPONSE_TIMER);
             } catch (IOException e) {
@@ -78,7 +73,7 @@ public class PacketSender extends Thread {
 
     private void sendListQuery() {
             try {
-                byte[] fileListQuery = new FileListQuery().createPacket(bytes, seqNumber);
+                byte[] fileListQuery = new FileListQuery().createPacket();
                 DatagramPacket sendpkt = new DatagramPacket(fileListQuery,
                         fileListQuery.length, server.externalhost, UDPFileServer.PORT);
                 System.out.println("Sending File List Query......");
@@ -94,7 +89,7 @@ public class PacketSender extends Thread {
     private void sendListQueryResponse() {
         sendListQuery = false;
         try {
-            byte[] fileListQueryResponse = new FileListQueryResponse().createPacket(server.getFileBytes(server.localFiles), seqNumber);
+            byte[] fileListQueryResponse = new FileListQueryResponse().createPacket(server.getMapBytes(server.localFiles));
             DatagramPacket sendpkt = new DatagramPacket(fileListQueryResponse,
                     fileListQueryResponse.length, server.externalhost, UDPFileServer.PORT);
             System.out.println("Sending File List......");
@@ -108,7 +103,7 @@ public class PacketSender extends Thread {
 
     private void sendMulticastPacket() {
         try {
-            byte[] mDNSPacket = new mDNSSyn().createPacket(bytes, seqNumber);
+            byte[] mDNSPacket = new mDNSSyn().createPacket();
             DatagramPacket sendpkt = new DatagramPacket(mDNSPacket, mDNSPacket.length, InetAddress.getByName(MULTICAST_ADDRESS), UDPFileServer.PORT);
             System.out.println("Sending mDNS packet......");
             socket.send(sendpkt);
@@ -121,7 +116,7 @@ public class PacketSender extends Thread {
 
     private void sendMulticastPacketResponse() {
         try {
-            byte[] mDNSResponse = new mDNSSynAck().createPacket("Is it me you are looking for?".getBytes(), seqNumber);
+            byte[] mDNSResponse = new mDNSSynAck().createPacket();
             DatagramPacket sendpkt = new DatagramPacket(mDNSResponse, mDNSResponse.length, server.externalhost, UDPFileServer.PORT);
             System.out.println("Sending mDNS response......");
             socket.send(sendpkt);
@@ -160,17 +155,12 @@ public class PacketSender extends Thread {
         this.finishedSending = finishedSending;
     }
 
-
     public void setListQueryAck(boolean listQueryAck) {
         this.listQueryAck = listQueryAck;
     }
 
     public void setSendFile(boolean sendFile) {
         this.sendFile = sendFile;
-    }
-
-    public void setBytes(byte[] bytes) {
-        this.bytes = bytes;
     }
 }
 

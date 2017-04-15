@@ -24,10 +24,10 @@ public class ConsoleInput implements ConsoleCommands {
                 command = new LSPICommand(server, socket);
                 break;
             case UPLOAD:
-                command = new UploadCommand(splitMessage[0], server);
+                command = new UploadCommand(splitMessage[1], server);
                 break;
             case DOWNLOAD:
-                command = new DownloadCommand(splitMessage[0], server);
+                command = new DownloadCommand(splitMessage[1], server);
                 break;
             default:
                 command = new EmptyCommand(server);

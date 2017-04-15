@@ -2,10 +2,6 @@ package com.nedap.university.packetTypes;
 
 import com.nedap.university.header.StandardHeader;
 
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 /**
  * Created by martijn.slot on 11/04/2017.
  */
@@ -15,9 +11,10 @@ public class mDNSSynAck extends StandardPacket {
         super();
     }
 
-    @Override
-    public byte[] createPacket(byte[] data, int sequenceNumber) {
-        this.data = data;
+    public byte[] createPacket() {
+
+        byte[] data = "Is it me you are looking for?".getBytes();
+        int sequenceNumber = 1;
 
         StandardHeader mDNSResponseHeader = new StandardHeader();
         mDNSResponseHeader.setFlags("00100001");

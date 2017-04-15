@@ -1,6 +1,7 @@
 package com.nedap.university.udpFileServer;
 
 import com.nedap.university.application.FileSplitter;
+import com.nedap.university.packetTypes.DataPacket;
 import com.nedap.university.udpFileServer.console.*;
 import com.nedap.university.udpFileServer.incomingPacketHandlers.*;
 import com.nedap.university.udpFileServer.dataHandlers.*;
@@ -27,20 +28,15 @@ public class UDPFileServer {
     private Map<Byte, Flags> allPackets = new HashMap<>();
     private BufferedReader humanInput;
     private final String filePath;
-    private static final int HEADER_LENGTH = 13;
     static final int PORT = 1234;
     final InetAddress localhost;
-    static Map<Integer, String> localFiles;
-    private FileSplitter fileSplitter;
+    Map<Integer, String> localFiles;
+    FileSplitter fileSplitter = new FileSplitter();
 
     public UDPFileServer(String filePath) {
         this.filePath = filePath;
         localhost = getLocalAddress();
 
-    }
-
-    public static int getHeaderLength() {
-        return HEADER_LENGTH;
     }
 
     public void init() {
@@ -53,14 +49,11 @@ public class UDPFileServer {
         setUpAllPackets();
         localFiles = getFiles();
 
-        fileSplitter = new FileSplitter();
-
         humanInput = new BufferedReader(new InputStreamReader(System.in));
 
         packetReceiver = new PacketReceiver(this, zocket);
         packetSender = new PacketSender(this, zocket);
         packetSender.setMulticast(true);
-        packetSender.setBytes("Hello".getBytes());
         packetReceiver.start();
         packetSender.start();
 
@@ -193,7 +186,7 @@ public class UDPFileServer {
         System.out.println("===================\n");
     }
 
-    public byte[] getFileBytes(Map<Integer, String> files) {
+    public byte[] getMapBytes(Map<Integer, String> files) {
         try {
             return MapToBytesAndBack.serialize(files);
         } catch (IOException e) {
@@ -205,7 +198,7 @@ public class UDPFileServer {
         return zocket;
     }
 
-    public static String getLocalFile(int id) {
+    public String getLocalFile(int id) {
         return localFiles.get(id);
     }
 
@@ -214,5 +207,24 @@ public class UDPFileServer {
         packetSender.setMulticastAck(false);
         packetSender.setFinishedSending(true);
         packetReceiver.setFinishedReceiving(true);
+    }
+
+    public void uploadFiles(int fileID) {
+        int seqNumber = 1;
+        String fileToSend = getLocalFile(fileID);
+        printFiles(localFiles);
+        System.out.println("Uploading file : " + filePath + "/" + fileToSend);
+        Integer[] file = fileSplitter.getFileContents(filePath + "/" + fileToSend);
+
+        byte[] packetToSend = createDataPacket(fileSplitter, file, seqNumber);
+
+        //TODO send die shit
+
+    }
+
+    public byte[] createDataPacket(FileSplitter fileSplitter, Integer[] data, int seqNumber) {
+        data = fileSplitter.createPacket(seqNumber, data);
+        return new DataPacket().createPacket(data,  seqNumber);
+
     }
 }

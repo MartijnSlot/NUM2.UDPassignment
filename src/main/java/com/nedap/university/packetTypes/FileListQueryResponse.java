@@ -1,19 +1,19 @@
 package com.nedap.university.packetTypes;
 
 import com.nedap.university.header.StandardHeader;
-import com.nedap.university.udpFileServer.UDPFileServer;
-
-import java.net.DatagramPacket;
-import java.util.Map;
 
 /**
  * Created by martijn.slot on 11/04/2017.
  */
 public class FileListQueryResponse extends StandardPacket {
 
-    @Override
-    public byte[] createPacket(byte[] data, int seqNumber) {
+    public FileListQueryResponse() {
+        super();
+    }
+
+    public byte[] createPacket(byte[] data) {
         this.data = data;
+        int seqNumber = 1;
 
         StandardHeader mDNSheader = new StandardHeader();
         mDNSheader.setFlags("00100100");

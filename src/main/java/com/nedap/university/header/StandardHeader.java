@@ -15,6 +15,7 @@ public class StandardHeader {
     byte[] length;
     byte[] sequenceNumber;
     byte[] flags = new byte[1];
+    int HEADERLENGTH = 13;
 
     public StandardHeader() {
         super();
@@ -34,7 +35,7 @@ public class StandardHeader {
     }
 
     public void setChecksum(byte[] data) {
-        MessageDigest md = null;
+        MessageDigest md;
         try {
             md = MessageDigest.getInstance("MD5");
             byte[] thedigest = md.digest(data);
@@ -45,7 +46,7 @@ public class StandardHeader {
     }
 
     public void setLength(int a) {
-        length = intToByteArray(UDPFileServer.getHeaderLength() + a);
+        length = intToByteArray(HEADERLENGTH + a);
     }
 
     public void setFlags(String a) {

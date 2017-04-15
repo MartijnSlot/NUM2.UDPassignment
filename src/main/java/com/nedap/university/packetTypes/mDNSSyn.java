@@ -11,9 +11,10 @@ public class mDNSSyn extends StandardPacket {
         super();
     }
 
-    @Override
-    public byte[] createPacket(byte[] data, int seqNumber) {
-        this.data = data;
+    public byte[] createPacket() {
+
+        byte[] data = "Hello?".getBytes();
+        int seqNumber = 1;
 
         StandardHeader mDNSheader = new StandardHeader();
         mDNSheader.setFlags("00000001");

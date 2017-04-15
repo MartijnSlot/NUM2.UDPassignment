@@ -13,7 +13,6 @@ public class FileListQueryHandler implements packetHandler {
 
     @Override
     public void start(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender apekop, byte[] data) {
-//        if (udpFileServer.externalhost == packetAddress) {
         apekop.setFinishedSending(true);
         System.out.println("Received List Query");
             PacketSender packetSender = new PacketSender(udpFileServer, udpFileServer.getSocket());
@@ -25,6 +24,5 @@ public class FileListQueryHandler implements packetHandler {
                 e.printStackTrace();
             }
             packetSender.setFinishedSending(true);
-//        }
     }
 }
