@@ -1,20 +1,14 @@
 package com.nedap.university.application;
 
-import com.nedap.university.udpFileServer.UDPFileServer;
-
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Created by martijn.slot on 10/04/2017.
  */
 public class FileSplitter {
 
-    private static final int PACKETSIZE = 3000;
-    private static final int HEADERSIZE = 13;
-
+    private static final int PACKETSIZE = 1450;
 
     public FileSplitter() {
 

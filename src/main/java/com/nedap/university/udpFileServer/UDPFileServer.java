@@ -119,6 +119,8 @@ public class UDPFileServer {
                 listQueryResponseHandler.start(this, packetAddress, new PacketSender(this, zocket), packet);
                 break;
             case DATA:
+                packetHandler dataPacketHandler = new DataPacketHandler();
+                dataPacketHandler.start(this, packetAddress, new PacketSender(this, zocket), packet);
 
                 break;
             case DATA_ACK:
