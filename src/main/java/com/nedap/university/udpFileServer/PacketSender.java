@@ -1,7 +1,9 @@
 package com.nedap.university.udpFileServer;
 
+import com.nedap.university.application.FileSplitter;
 import com.nedap.university.packetTypes.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.*;
 
@@ -23,7 +25,10 @@ public class PacketSender extends Thread {
     private static final int INITIATION_TIMER = 100;
     private static final int RESPONSE_TIMER = 2000;
     private boolean sendFile;
-    private byte[] dataPacket;
+    private FileSplitter fileSplitter;
+    private String fileToSend;
+    private Integer[] datafile;
+    private int numberOfFragments;
 
     public PacketSender(UDPFileServer server, DatagramSocket serverSocket) {
         this.server = server;
@@ -54,22 +59,40 @@ public class PacketSender extends Thread {
             }
 
             if (sendFile) {
-                sendFile(dataPacket);
+                sendFile();
             }
         }
     }
 
-    private void sendFile(byte [] dataPacket) {
-            try {
-                DatagramPacket sendpkt = new DatagramPacket(dataPacket,
-                        dataPacket.length, server.externalhost, UDPFileServer.PORT);
-                socket.send(sendpkt);
-                waiting(RESPONSE_TIMER);
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println("ERROR: niet zo cool ouwe, list query packet niet verzonden.");
-            }
+    private void sendFile() {
+        initDataToSend();
+
+                for (int i = 1; i <= numberOfFragments; i++) {
+                    byte[] dataPacket = createDataPacket(fileSplitter, datafile, i);
+                    DatagramPacket sendpkt = new DatagramPacket(dataPacket, dataPacket.length, server.externalhost, UDPFileServer.PORT);
+                    try {
+                        socket.send(sendpkt);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        System.out.println("ERROR: niet zo cool ouwe, datapacket : " + i + " packet niet verzonden.");
+                    }
+                }
+                setFinishedSending(true);
     }
+
+
+    public void initDataToSend() {
+        datafile = fileSplitter.getFileContents(server.getFilePath() + "/" + fileToSend);
+        numberOfFragments = datafile.length / fileSplitter.getPacketSize() + 1;
+        System.out.println("Number of packets to send in total = " + numberOfFragments);
+    }
+
+    public byte[] createDataPacket(FileSplitter fileSplitter, Integer[] data, int seqNumber) {
+        data = fileSplitter.createPacket(seqNumber, data);
+        return new DataPacket().createPacket(data, fileToSend, seqNumber);
+
+    }
+
 
     private void sendListQuery() {
             try {
@@ -161,6 +184,14 @@ public class PacketSender extends Thread {
 
     public void setSendFile(boolean sendFile) {
         this.sendFile = sendFile;
+    }
+
+    public void setFileSplitter(FileSplitter fileSplitter) {
+        this.fileSplitter = fileSplitter;
+    }
+
+    public void setFileName(String fileToSend) {
+        this.fileToSend = fileToSend;
     }
 }
 

@@ -12,7 +12,7 @@ import java.util.Set;
  */
 public class FileSplitter {
 
-    private static final int PACKETSIZE = 1500;
+    private static final int PACKETSIZE = 3000;
     private static final int HEADERSIZE = 13;
 
 
@@ -49,14 +49,10 @@ public class FileSplitter {
     /**
      * creates a packet
      * @param i the number of the packet (1 to numberofFragments)
-     * @param fileContents total file contents
-     * @return portion of file in Integer array
+     *@param fileContents total file contents  @return portion of file in Integer array
      */
     public Integer[] createPacket(int i, Integer[] fileContents) {
 
-        int numberOfFragments = fileContents.length / PACKETSIZE + 1;
-
-        System.out.println("Number of packets to send in total = " + numberOfFragments);
         Integer[] pkt = null;
         int filePointer = PACKETSIZE * (i-1);
         int datalen = Math.min(PACKETSIZE, fileContents.length - filePointer);
@@ -67,8 +63,7 @@ public class FileSplitter {
         return pkt;
     }
 
-
-    public int getHeaderLength() {
-        return HEADERSIZE;
+    public int getPacketSize() {
+        return PACKETSIZE;
     }
 }

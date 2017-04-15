@@ -8,16 +8,26 @@ import com.nedap.university.header.StandardHeader;
  */
 public class DataPacket extends StandardPacket {
 
+    private static final int FILE_NAME_BYTES = 50;
+
     public DataPacket(){
         super();
     }
 
-    public byte[] createPacket(Integer[] dataInts, int seqNumber) {
+    public byte[] createPacket(Integer[] dataInts, String fileToSend, int seqNumber) {
 
-        byte[] data = new byte[dataInts.length];
+        byte[] fileNameFlag = new byte[FILE_NAME_BYTES];
+        byte[] fileNameBytes = fileToSend.getBytes();
+        System.arraycopy(fileNameBytes, 0, fileNameFlag, 0, fileNameBytes.length);
+
+        byte[] fileData = new byte[dataInts.length];
         for (int i = 0; i < dataInts.length; i++) {
-            data[i] = (byte) ((dataInts[i] & 0x000000ff));
+            fileData[i] = (byte) ((dataInts[i] & 0x000000ff));
         }
+
+        byte[] data = new byte[fileNameFlag.length + dataInts.length];
+        System.arraycopy(fileNameFlag, 0, data, 0, fileNameFlag.length);
+        System.arraycopy(fileData, 0, data, fileNameFlag.length, fileData.length);
 
         StandardHeader dataHeader = new StandardHeader();
         dataHeader.setFlags("00001000");

@@ -1,7 +1,6 @@
 package com.nedap.university.udpFileServer;
 
 import com.nedap.university.application.FileSplitter;
-import com.nedap.university.packetTypes.DataPacket;
 import com.nedap.university.udpFileServer.console.*;
 import com.nedap.university.udpFileServer.incomingPacketHandlers.*;
 import com.nedap.university.udpFileServer.dataHandlers.*;
@@ -210,21 +209,21 @@ public class UDPFileServer {
     }
 
     public void uploadFiles(int fileID) {
-        int seqNumber = 1;
+
         String fileToSend = getLocalFile(fileID);
         printFiles(localFiles);
         System.out.println("Uploading file : " + filePath + "/" + fileToSend);
-        Integer[] file = fileSplitter.getFileContents(filePath + "/" + fileToSend);
 
-        byte[] packetToSend = createDataPacket(fileSplitter, file, seqNumber);
 
-        //TODO send die shit
+        PacketSender packetSender = new PacketSender(this, zocket);
+        packetSender.setSendFile(true);
+        packetSender.setFileName(fileToSend);
+        packetSender.setFileSplitter(new FileSplitter());
+        packetSender.run();
 
     }
 
-    public byte[] createDataPacket(FileSplitter fileSplitter, Integer[] data, int seqNumber) {
-        data = fileSplitter.createPacket(seqNumber, data);
-        return new DataPacket().createPacket(data,  seqNumber);
-
+    public String getFilePath() {
+        return filePath;
     }
 }
