@@ -21,9 +21,11 @@ public class PacketSender extends Thread {
     private boolean sendListQuery;
     private boolean listQueryAck = false;
     private boolean sendListQueryResponse;
+    private int seqNum;
     private boolean finishedSending = false;
     private static final int INITIATION_TIMER = 100;
     private static final int RESPONSE_TIMER = 2000;
+    private static final int DATA_TIMER = 50;
     private boolean sendFile;
     private boolean sendDataAcks;
 
@@ -63,6 +65,10 @@ public class PacketSender extends Thread {
                 sendDataPacket();
             }
 
+            if(sendDataAcks) {
+                sendDataAcks();
+            }
+
         }
         try {
             Thread.sleep(5);
@@ -72,6 +78,17 @@ public class PacketSender extends Thread {
     }
 
     private void sendDataAcks() {
+        byte [] ackPacket = protocol1.getDataAck(seqNum);
+        if (ackPacket != null) {
+            DatagramPacket packet = new DatagramPacket(ackPacket, ackPacket.length, server.externalhost, UDPFileServer.PORT);
+//            System.out.println("sending data ack");
+            try {
+                socket.send(packet);
+                waiting(DATA_TIMER);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
@@ -80,8 +97,10 @@ public class PacketSender extends Thread {
         byte [] dataPacket = protocol1.getData();
         if (dataPacket != null) {
             DatagramPacket packet = new DatagramPacket(dataPacket, dataPacket.length, server.externalhost, UDPFileServer.PORT);
+//            System.out.println("sending data packet");
             try {
                 socket.send(packet);
+                waiting(DATA_TIMER);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -122,7 +141,7 @@ public class PacketSender extends Thread {
 
     private void sendMulticastPacket() {
         try {
-            byte[] mDNSPacket = new mDNSSyn().createPacket();
+            byte[] mDNSPacket = new MDNSSyn().createPacket();
             DatagramPacket sendpkt = new DatagramPacket(mDNSPacket, mDNSPacket.length, InetAddress.getByName(MULTICAST_ADDRESS), UDPFileServer.PORT);
             System.out.println("Sending mDNS packet......");
             socket.send(sendpkt);
@@ -135,7 +154,7 @@ public class PacketSender extends Thread {
 
     private void sendMulticastPacketResponse() {
         try {
-            byte[] mDNSResponse = new mDNSSynAck().createPacket();
+            byte[] mDNSResponse = new MDNSSynAck().createPacket();
             DatagramPacket sendpkt = new DatagramPacket(mDNSResponse, mDNSResponse.length, server.externalhost, UDPFileServer.PORT);
             System.out.println("Sending mDNS response......");
             socket.send(sendpkt);
@@ -186,5 +205,8 @@ public class PacketSender extends Thread {
         this.sendDataAcks = sendDataAcks;
     }
 
+    public void setSeqNum(int seqNum) {
+        this.seqNum = seqNum;
+    }
 }
 

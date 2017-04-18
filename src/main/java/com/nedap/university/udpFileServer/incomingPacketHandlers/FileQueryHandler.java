@@ -8,10 +8,10 @@ import java.net.InetAddress;
 /**
  * Created by martijn.slot on 14/04/2017.
  */
-public class FileQueryHandler implements packetHandler{
+public class FileQueryHandler implements PacketHandler {
 
     @Override
-    public void start(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender apekop, byte[] data) {
+    public void initiateHandler(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender apekop, byte[] data) {
         apekop.setFinishedSending(true);
         System.out.println("Received Download Query");
         PacketSender packetSender = new PacketSender(udpFileServer, udpFileServer.getSocket());

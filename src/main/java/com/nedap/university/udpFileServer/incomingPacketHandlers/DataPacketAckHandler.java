@@ -12,7 +12,7 @@ import java.util.Set;
 /**
  * Created by martijn.slot on 18/04/2017.
  */
-public class DataPacketAckHandler implements packetHandler {
+public class DataPacketAckHandler implements PacketHandler {
 
     static int blocklength = StandardHeader.getBlockLength();
     private byte[] seqNumBytes = new byte[blocklength];
@@ -20,7 +20,12 @@ public class DataPacketAckHandler implements packetHandler {
 
 
     @Override
-    public void start(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender packetSender, byte[] data) {
+    public void initiateHandler(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender packetSender, byte[] data) {
+
+        packetSender.setFinishedSending(true);
+
+        System.arraycopy(data, 4, seqNumBytes, 0, blocklength);
+
         int seqNum = ByteBuffer.wrap(seqNumBytes).getInt();
         System.out.println("Received ACK packet with header = " + seqNum);
         receivedAcks.add(seqNum);

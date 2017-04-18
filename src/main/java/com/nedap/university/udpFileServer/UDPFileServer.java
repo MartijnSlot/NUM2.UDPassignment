@@ -1,6 +1,5 @@
 package com.nedap.university.udpFileServer;
 
-import com.nedap.university.application.FileSplitter;
 import com.nedap.university.protocols.protocol1.Protocol1;
 import com.nedap.university.udpFileServer.console.*;
 import com.nedap.university.udpFileServer.incomingPacketHandlers.*;
@@ -86,7 +85,7 @@ public class UDPFileServer {
     void handleReceivedPacket(byte[] packet, InetAddress packetAddress) {
         byte[] packetFlags = Arrays.copyOfRange(packet, 0, 1);
         byte[] data = Arrays.copyOfRange(packet, 1, packet.length);
-        System.out.println("data length = " + data.length);
+//        System.out.println("data length = " + data.length);
 
         for (byte i : allPackets.keySet()) {
             if (packetFlags[0] == i) {
@@ -99,35 +98,33 @@ public class UDPFileServer {
         switch (allPackets.get(i)) {
             case MDNS:
                 if (!localhost.equals(packetAddress)) {
-                    packetHandler mDNShandler = new mDNSHandler();
-                    mDNShandler.start(this, packetAddress, packetSender, packet);
+                    PacketHandler mDNShandler = new MDNSHandler();
+                    mDNShandler.initiateHandler(this, packetAddress, packetSender, packet);
                 }
                 break;
             case MDNS_ACK:
                 if (externalhost != null) {
-                    packetHandler mDNSAckHandler = new mDNSHandler();
-                    mDNSAckHandler.start(this, packetAddress, packetSender, packet);
+                    PacketHandler mDNSAckHandler = new MDNSHandler();
+                    mDNSAckHandler.initiateHandler(this, packetAddress, packetSender, packet);
                 }
                 break;
             case FILE_QUERY:
                 break;
-            case FILE_QUERY_ACK:
-                break;
             case FILE_LIST_QUERY:
-                packetHandler fileListQueryHandler = new FileListQueryHandler();
-                fileListQueryHandler.start(this, packetAddress, packetSender, packet);
+                PacketHandler fileListQueryHandler = new FileListQueryHandler();
+                fileListQueryHandler.initiateHandler(this, packetAddress, packetSender, packet);
                 break;
             case FILE_LIST_QUERY_ACK:
-                packetHandler listQueryResponseHandler = new ListQueryResponseHandler();
-                listQueryResponseHandler.start(this, packetAddress, new PacketSender(this, zocket), packet);
+                PacketHandler listQueryResponseHandler = new ListQueryResponseHandler();
+                listQueryResponseHandler.initiateHandler(this, packetAddress, new PacketSender(this, zocket), packet);
                 break;
             case DATA:
-                packetHandler dataPacketHandler = new DataPacketHandler();
-                dataPacketHandler.start(this, packetAddress, new PacketSender(this, zocket), packet);
+                PacketHandler dataPacketHandler = new DataPacketHandler();
+                dataPacketHandler.initiateHandler(this, packetAddress, new PacketSender(this, zocket), packet);
 
                 break;
             case DATA_ACK:
-                dataPacketAckHandler.start(this, packetAddress, new PacketSender(this, zocket), packet);
+                dataPacketAckHandler.initiateHandler(this, packetAddress, new PacketSender(this, zocket), packet);
                 break;
             default:
                 System.out.println("No flags have been set. Packet will be dropped.");
@@ -226,12 +223,30 @@ public class UDPFileServer {
 
     public void runProtocol(int fileID) {
 
-        protocol = new Protocol1(zocket, this, localFiles.get(fileID), dataPacketAckHandler);
+        protocol = new Protocol1(this, localFiles.get(fileID), dataPacketAckHandler);
         packetSender = new PacketSender(this, zocket, protocol);
         packetSender.setSendFile(true);
         packetSender.start();
         packetReceiver = new PacketReceiver(this, zocket);
         packetReceiver.start();
         protocol.initiateProtocol();
+        packetSender.setFinishedSending(true);
+        System.out.println("\n -- GREAT SUCCES! FILE HAS BEEN TRANSFERRED! -- \n");
     }
+
+    public void sendAck(int seqNum) {
+        protocol = new Protocol1(this, dataPacketAckHandler);
+        packetSender = new PacketSender(this, zocket, protocol);
+        packetSender.setSendDataAcks(true);
+        packetSender.setSeqNum(seqNum);
+        packetSender.start();
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        packetSender.setSendDataAcks(false);
+        packetSender.setFinishedSending(true);
+    }
+
 }

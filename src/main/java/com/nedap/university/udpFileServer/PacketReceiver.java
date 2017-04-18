@@ -1,19 +1,14 @@
 package com.nedap.university.udpFileServer;
 
-import com.nedap.university.udpFileServer.UDPFileServer;
-
 import java.io.IOException;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Enumeration;
 
 /**
  * Created by martijn.slot on 10/04/2017.
  */
 public class PacketReceiver extends Thread {
 
-    private static final int RECIEVER_SLEEP = 50;
+    private static final int RECEIVER_SLEEP = 50;
     private final UDPFileServer server;
     private DatagramSocket serverSocket;
     private int length = 50000;
@@ -47,7 +42,7 @@ public class PacketReceiver extends Thread {
 
                 server.handleReceivedPacket(receiveData, packetAddress);
 
-                Thread.sleep(RECIEVER_SLEEP);
+                Thread.sleep(RECEIVER_SLEEP);
 
             }
 

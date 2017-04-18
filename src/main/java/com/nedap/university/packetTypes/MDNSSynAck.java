@@ -5,9 +5,9 @@ import com.nedap.university.header.StandardHeader;
 /**
  * Created by martijn.slot on 11/04/2017.
  */
-public class mDNSSynAck extends StandardPacket {
+public class MDNSSynAck extends StandardPacket {
 
-    public mDNSSynAck() {
+    public MDNSSynAck() {
         super();
     }
 

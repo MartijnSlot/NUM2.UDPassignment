@@ -8,10 +8,10 @@ import java.net.InetAddress;
 /**
  * Created by martijn.slot on 13/04/2017.
  */
-public class mDNSHandler implements packetHandler {
+public class MDNSHandler implements PacketHandler {
 
     @Override
-    public void start(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender packetSender, byte[] data) {
+    public void initiateHandler(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender packetSender, byte[] data) {
         if (udpFileServer.externalhost == null) {
             udpFileServer.externalhost = packetAddress;
             System.out.println("FOUND external host on : " + udpFileServer.externalhost.getHostAddress());

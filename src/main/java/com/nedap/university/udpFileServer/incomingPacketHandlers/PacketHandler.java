@@ -9,8 +9,8 @@ import java.net.InetAddress;
 /**
  * Created by martijn.slot on 13/04/2017.
  */
-public interface packetHandler {
+public interface PacketHandler {
 
-    void start(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender packetSender, byte[] data);
+    void initiateHandler(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender packetSender, byte[] data);
 
 }

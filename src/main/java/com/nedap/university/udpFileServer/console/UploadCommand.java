@@ -17,15 +17,15 @@ public class UploadCommand extends Command {
 
     @Override
     public void execute() {
-        int fileID = 0;
+        int fileIntID = 0;
         try {
-            fileID = Integer.parseInt(this.fileID);
+            fileIntID = Integer.parseInt(this.fileID);
         } catch (NumberFormatException e) {
             System.out.println("\nfileID: --" + this.fileID + "-- must be an integer");
             server.waitForInput();
         }
 
-        server.uploadFiles(fileID);
+        server.uploadFiles(fileIntID);
         server.waitForInput();
 
     }

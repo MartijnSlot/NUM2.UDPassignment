@@ -2,6 +2,7 @@ package com.nedap.university.protocols.protocol1;
 
 import com.nedap.university.application.FileSplitter;
 import com.nedap.university.packetTypes.DataPacket;
+import com.nedap.university.packetTypes.DataPacketACK;
 import com.nedap.university.udpFileServer.UDPFileServer;
 import com.nedap.university.udpFileServer.incomingPacketHandlers.DataPacketAckHandler;
 
@@ -17,29 +18,32 @@ public class Protocol1 {
     private final DataPacketAckHandler dataPacketAckHandler;
     private String fileToSend;
     private UDPFileServer server;
-    private DatagramSocket zocket;
     private FileSplitter fileSplitter = new FileSplitter();
-    private Integer[] datafile;
-    private int numberOfFragments;
     private int seqNumber = 1;
     private Map<Integer, byte[]> sendData = new HashMap<>();
+    private Set<Integer> receivedAcks = new HashSet<>();
 
-    public Protocol1(DatagramSocket socket, UDPFileServer server, String fileToSend, DataPacketAckHandler dataPacketAckHandler) {
-        this.zocket = socket;
+    public Protocol1(UDPFileServer server, String fileToSend, DataPacketAckHandler dataPacketAckHandler) {
         this.server = server;
         this.fileToSend = fileToSend;
         this.dataPacketAckHandler = dataPacketAckHandler;
-        datafile = fileSplitter.getFileContents(server.getFilePath() + "/" + fileToSend);
-        numberOfFragments = datafile.length / fileSplitter.getPacketSize() + 1;
-
     }
+
+    public Protocol1(UDPFileServer server, DataPacketAckHandler dataPacketAckHandler) {
+        this.server = server;
+        this.dataPacketAckHandler = dataPacketAckHandler;
+    }
+
     public void initiateProtocol() {
-        System.out.println("Number of packets to send in total = " + numberOfFragments);
         preparePackagesToSend();
     }
 
     public byte[] getData() {
         return sendData.get(seqNumber);
+    }
+
+    public byte[] getDataAck(int seqNum) {
+        return createAckPacket(seqNum);
     }
 
     private byte[] createDataPacket(FileSplitter fileSplitter, Integer[] data, int seqNumber) {
@@ -48,14 +52,22 @@ public class Protocol1 {
 
     }
 
-    public void preparePackagesToSend() {
-        Set<Integer> receivedAcks = new HashSet<>();
+    private byte[] createAckPacket(int seqNumber) {
+        return new DataPacketACK().createPacket(seqNumber);
+
+    }
+
+    private void preparePackagesToSend() {
+        Integer[] datafile = fileSplitter.getFileContents(server.getFilePath() + "/" + fileToSend);
+        int numberOfFragments = datafile.length / fileSplitter.getPacketSize() + 1;
+        System.out.println("Number of fragments to send int total : " + numberOfFragments);
+
         while (receivedAcks.size() != numberOfFragments) {
             int fragmentCounter;
             int lowerbound;
             int upperbound;
 
-            //define window boundaries
+            //define window boundaries for sliding window!
             if (receivedAcks.isEmpty()) {
                 lowerbound = 1;
                 upperbound = Math.min(WINDOWSIZE, numberOfFragments);
@@ -73,7 +85,6 @@ public class Protocol1 {
             }
 
             receivedAcks = checkForAcks(dataPacketAckHandler);
-
         }
     }
 
@@ -103,7 +114,5 @@ public class Protocol1 {
     private Set<Integer> checkForAcks(DataPacketAckHandler dataPacketAckHandler) {
         return dataPacketAckHandler.getAcks();
     }
-
-
 
 }

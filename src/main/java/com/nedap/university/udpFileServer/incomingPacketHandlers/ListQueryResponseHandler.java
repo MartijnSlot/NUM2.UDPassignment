@@ -12,10 +12,10 @@ import java.util.Map;
 /**
  * Created by martijn.slot on 13/04/2017.
  */
-public class ListQueryResponseHandler implements packetHandler {
+public class ListQueryResponseHandler implements PacketHandler {
 
     @Override
-    public void start(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender apekop, byte[] data) {
+    public void initiateHandler(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender apekop, byte[] data) {
 
         System.out.println("Received file list from PI");
         byte [] datafile = new byte[data.length - 12];
