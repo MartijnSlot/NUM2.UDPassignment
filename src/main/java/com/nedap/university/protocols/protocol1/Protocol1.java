@@ -37,8 +37,8 @@ public class Protocol1 {
         preparePackagesToSend();
     }
 
-    public byte[] getData() {
-        return sendData.get(seqNumber);
+    public Map<Integer, byte[]> getData() {
+        return sendData;
     }
 
     public byte[] getDataAck(int seqNum) {
@@ -81,6 +81,11 @@ public class Protocol1 {
                     seqNumber = fragmentCounter;
                     sendData.put(seqNumber, createDataPacket(fileSplitter, datafile, seqNumber));
                 }
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
             receivedAcks = checkForAcks(dataPacketAckHandler);
         }

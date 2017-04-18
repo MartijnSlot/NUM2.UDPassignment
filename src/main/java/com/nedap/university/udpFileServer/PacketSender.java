@@ -5,6 +5,8 @@ import com.nedap.university.protocols.protocol1.Protocol1;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -25,7 +27,7 @@ public class PacketSender extends Thread {
     private boolean finishedSending = false;
     private static final int INITIATION_TIMER = 100;
     private static final int RESPONSE_TIMER = 2000;
-    private static final int DATA_TIMER = 50;
+    private static final int DATA_TIMER = 1000;
     private boolean sendFile;
     private boolean sendDataAcks;
 
@@ -63,6 +65,8 @@ public class PacketSender extends Thread {
 
             if (sendFile) {
                 sendDataPacket();
+                waiting(DATA_TIMER);
+
             }
 
             if(sendDataAcks) {
@@ -71,7 +75,7 @@ public class PacketSender extends Thread {
 
         }
         try {
-            Thread.sleep(5);
+            Thread.sleep(DATA_TIMER + 100);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -83,7 +87,6 @@ public class PacketSender extends Thread {
             DatagramPacket packet = new DatagramPacket(ackPacket, ackPacket.length, server.externalhost, UDPFileServer.PORT);
             try {
                 socket.send(packet);
-                waiting(DATA_TIMER);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -91,14 +94,14 @@ public class PacketSender extends Thread {
 
     }
 
-
     private void sendDataPacket() {
-        byte [] dataPacket = protocol1.getData();
-        if (dataPacket != null) {
+        Map<Integer, byte[]> dataToSend = protocol1.getData();
+        for (Integer dataPacketID : dataToSend.keySet()) {
+            byte [] dataPacket = dataToSend.get(dataPacketID);
             DatagramPacket packet = new DatagramPacket(dataPacket, dataPacket.length, server.externalhost, UDPFileServer.PORT);
             try {
                 socket.send(packet);
-                waiting(DATA_TIMER);
+                waiting(50);
             } catch (IOException e) {
                 e.printStackTrace();
             }
