@@ -1,10 +1,8 @@
 package com.nedap.university.udpFileServer;
 
-import com.nedap.university.application.FileSplitter;
 import com.nedap.university.packetTypes.*;
-import com.nedap.university.protocols.protocol1.Sender1;
+import com.nedap.university.protocols.protocol1.Protocol1;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.*;
 
@@ -17,6 +15,7 @@ public class PacketSender extends Thread {
     private final DatagramSocket socket;
     private final UDPFileServer server;
     private static final String MULTICAST_ADDRESS = "192.168.40.255";
+    private Protocol1 protocol1;
     private boolean multicast;
     private boolean multicastAck;
     private boolean sendListQuery;
@@ -26,12 +25,17 @@ public class PacketSender extends Thread {
     private static final int INITIATION_TIMER = 100;
     private static final int RESPONSE_TIMER = 2000;
     private boolean sendFile;
-    private Sender1 sender;
     private boolean sendDataAcks;
 
     public PacketSender(UDPFileServer server, DatagramSocket serverSocket) {
         this.server = server;
         this.socket = serverSocket;
+    }
+
+    public PacketSender(UDPFileServer server, DatagramSocket serverSocket, Protocol1 protocol1) {
+        this.server = server;
+        this.socket = serverSocket;
+        this.protocol1 = protocol1;
     }
 
     @Override
@@ -41,7 +45,6 @@ public class PacketSender extends Thread {
 
             if (multicast) {
                 sendMulticastPacket();
-
             }
 
             if (multicastAck) {
@@ -54,13 +57,17 @@ public class PacketSender extends Thread {
 
             if (sendListQueryResponse) {
                 sendListQueryResponse();
-
             }
 
             if (sendFile) {
                 sendDataPacket();
             }
 
+        }
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -70,8 +77,8 @@ public class PacketSender extends Thread {
 
 
     public void sendDataPacket() {
-        byte [] dataPacket = sender.getData();
-        if (dataPacket.length != 0) {
+        byte [] dataPacket = protocol1.getData();
+        if (dataPacket != null) {
             DatagramPacket packet = new DatagramPacket(dataPacket, dataPacket.length, server.externalhost, UDPFileServer.PORT);
             try {
                 socket.send(packet);

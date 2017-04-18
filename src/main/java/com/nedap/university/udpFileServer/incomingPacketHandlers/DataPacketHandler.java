@@ -1,7 +1,6 @@
 package com.nedap.university.udpFileServer.incomingPacketHandlers;
 
 import com.nedap.university.header.StandardHeader;
-import com.nedap.university.protocols.protocol1.Receiver;
 import com.nedap.university.udpFileServer.PacketSender;
 import com.nedap.university.udpFileServer.UDPFileServer;
 
@@ -20,7 +19,6 @@ public class DataPacketHandler implements packetHandler {
     private byte[] seqNum = new byte[blocklength];
     private byte[] checkSum = new byte[blocklength];
     private byte[] fileName = new byte[20];
-    int protocolID;
 
     public DataPacketHandler(){
 
@@ -41,13 +39,8 @@ public class DataPacketHandler implements packetHandler {
         System.arraycopy(data, 13, datafile, 0, data.length - 3*blocklength);
 
         if(checkChecksum(datafile)) {
-            protocolID = udpFileServer.getProtocol();
-            if (protocolID == 1 ) {
-                if (ByteBuffer.wrap(seqNum).getInt() == 1){
-                    Receiver receiver = new Receiver(); //TODO
-                    receiver.initiateReceiver();
-                }
-            }
+                //TODO aan mekaar plakken
+
 
         } else {
             System.out.println("wat een gekkenhuis, je checksum komt niet overeen voor pakketje : " + ByteBuffer.wrap(seqNum).getInt());

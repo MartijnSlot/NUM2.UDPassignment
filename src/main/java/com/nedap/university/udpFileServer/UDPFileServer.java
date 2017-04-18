@@ -1,7 +1,7 @@
 package com.nedap.university.udpFileServer;
 
 import com.nedap.university.application.FileSplitter;
-import com.nedap.university.protocols.protocol1.Sender1;
+import com.nedap.university.protocols.protocol1.Protocol1;
 import com.nedap.university.udpFileServer.console.*;
 import com.nedap.university.udpFileServer.incomingPacketHandlers.*;
 import com.nedap.university.udpFileServer.dataHandlers.*;
@@ -32,7 +32,8 @@ public class UDPFileServer {
     static final int PORT = 1234;
     final InetAddress localhost;
     Map<Integer, String> localFiles;
-    FileSplitter fileSplitter = new FileSplitter();
+    private DataPacketAckHandler dataPacketAckHandler = new DataPacketAckHandler();
+    private Protocol1 protocol;
 
     public UDPFileServer(String filePath) {
         this.filePath = filePath;
@@ -126,7 +127,7 @@ public class UDPFileServer {
 
                 break;
             case DATA_ACK:
-
+                dataPacketAckHandler.start(this, packetAddress, new PacketSender(this, zocket), packet);
                 break;
             default:
                 System.out.println("No flags have been set. Packet will be dropped.");
@@ -213,31 +214,24 @@ public class UDPFileServer {
     }
 
     public void uploadFiles(int fileID) {
-
         String fileToSend = getLocalFile(fileID);
         printFiles(localFiles);
         System.out.println("Uploading file : " + filePath + "/" + fileToSend);
         runProtocol(fileID);
-
-
     }
 
     public String getFilePath() {
         return filePath;
     }
 
-    public int getProtocol() {
-        return PROTOCOLID;
-    }
-
-    public static int getPort() {
-        return PORT;
-    }
-
     public void runProtocol(int fileID) {
-        if(PROTOCOLID == 1) {
-            Sender1 sender = new Sender1(zocket, this, localFiles.get(fileID));
-            sender.initiateSender();
-        }
+
+        protocol = new Protocol1(zocket, this, localFiles.get(fileID), dataPacketAckHandler);
+        packetSender = new PacketSender(this, zocket, protocol);
+        packetSender.setSendFile(true);
+        packetSender.start();
+        packetReceiver = new PacketReceiver(this, zocket);
+        packetReceiver.start();
+        protocol.initiateProtocol();
     }
 }
