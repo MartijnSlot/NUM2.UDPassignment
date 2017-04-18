@@ -11,12 +11,12 @@ import java.util.Arrays;
  */
 public class StandardHeader {
 
-    byte[] checkSum;
-    byte[] length;
-    byte[] sequenceNumber;
-    byte[] flags = new byte[1];
-    static int HEADERLENGTH = 13;
-    static int BLOCKLENGTH = 4;
+    private byte[] checkSum;
+    private byte[] length;
+    private byte[] sequenceNumber;
+    private byte[] flags = new byte[1];
+    private static int HEADERLENGTH = 13;
+    private static int BLOCKLENGTH = 4;
 
     public StandardHeader() {
         super();

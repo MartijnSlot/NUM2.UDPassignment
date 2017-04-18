@@ -6,7 +6,6 @@ import com.nedap.university.packetTypes.DataPacketACK;
 import com.nedap.university.udpFileServer.UDPFileServer;
 import com.nedap.university.udpFileServer.incomingPacketHandlers.DataPacketAckHandler;
 
-import java.net.DatagramSocket;
 import java.util.*;
 
 /**
@@ -83,9 +82,9 @@ public class Protocol1 {
                     sendData.put(seqNumber, createDataPacket(fileSplitter, datafile, seqNumber));
                 }
             }
-
             receivedAcks = checkForAcks(dataPacketAckHandler);
         }
+
     }
 
     // determine lowerbound window size
@@ -115,4 +114,7 @@ public class Protocol1 {
         return dataPacketAckHandler.getAcks();
     }
 
+    public Set<Integer> getReceivedAcks() {
+        return receivedAcks;
+    }
 }

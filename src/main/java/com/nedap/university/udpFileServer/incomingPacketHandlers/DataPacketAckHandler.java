@@ -22,7 +22,7 @@ public class DataPacketAckHandler implements PacketHandler {
     @Override
     public void initiateHandler(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender packetSender, byte[] data) {
 
-        packetSender.setFinishedSending(true);
+//        packetSender.setFinishedSending(true);
 
         System.arraycopy(data, 4, seqNumBytes, 0, blocklength);
 

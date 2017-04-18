@@ -1,5 +1,6 @@
 package com.nedap.university.udpFileServer;
 
+import com.nedap.university.application.FileCompiler;
 import com.nedap.university.protocols.protocol1.Protocol1;
 import com.nedap.university.udpFileServer.console.*;
 import com.nedap.university.udpFileServer.incomingPacketHandlers.*;
@@ -20,7 +21,6 @@ import java.util.Map;
  */
 public class UDPFileServer {
 
-    private static final int PROTOCOLID = 1;
     private PacketReceiver packetReceiver;
     private PacketSender packetSender;
     private DatagramSocket zocket;
@@ -85,7 +85,6 @@ public class UDPFileServer {
     void handleReceivedPacket(byte[] packet, InetAddress packetAddress) {
         byte[] packetFlags = Arrays.copyOfRange(packet, 0, 1);
         byte[] data = Arrays.copyOfRange(packet, 1, packet.length);
-//        System.out.println("data length = " + data.length);
 
         for (byte i : allPackets.keySet()) {
             if (packetFlags[0] == i) {
@@ -121,7 +120,6 @@ public class UDPFileServer {
             case DATA:
                 PacketHandler dataPacketHandler = new DataPacketHandler();
                 dataPacketHandler.initiateHandler(this, packetAddress, new PacketSender(this, zocket), packet);
-
                 break;
             case DATA_ACK:
                 dataPacketAckHandler.initiateHandler(this, packetAddress, new PacketSender(this, zocket), packet);
@@ -231,7 +229,7 @@ public class UDPFileServer {
         packetReceiver.start();
         protocol.initiateProtocol();
         packetSender.setFinishedSending(true);
-        System.out.println("\n -- GREAT SUCCES! FILE HAS BEEN TRANSFERRED! -- \n");
+        System.out.println("\n -- GREAT SUCCESS! FILE HAS BEEN TRANSFERRED! -- \n");
     }
 
     public void sendAck(int seqNum) {
@@ -249,4 +247,16 @@ public class UDPFileServer {
         packetSender.setFinishedSending(true);
     }
 
+    public void checkAllAcks(FileCompiler fileCompiler) {
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+//        if (fileCompiler.getPacketMap().size() == protocol.getReceivedAcks().size()){
+//            packetSender.setFinishedSending(true);
+//            packetReceiver.setFinishedReceiving(true);
+            fileCompiler.glueAndSavePackets(filePath);
+//        }
+    }
 }

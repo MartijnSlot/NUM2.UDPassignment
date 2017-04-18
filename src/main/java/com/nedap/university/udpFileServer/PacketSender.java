@@ -81,7 +81,6 @@ public class PacketSender extends Thread {
         byte [] ackPacket = protocol1.getDataAck(seqNum);
         if (ackPacket != null) {
             DatagramPacket packet = new DatagramPacket(ackPacket, ackPacket.length, server.externalhost, UDPFileServer.PORT);
-//            System.out.println("sending data ack");
             try {
                 socket.send(packet);
                 waiting(DATA_TIMER);
@@ -93,11 +92,10 @@ public class PacketSender extends Thread {
     }
 
 
-    public void sendDataPacket() {
+    private void sendDataPacket() {
         byte [] dataPacket = protocol1.getData();
         if (dataPacket != null) {
             DatagramPacket packet = new DatagramPacket(dataPacket, dataPacket.length, server.externalhost, UDPFileServer.PORT);
-//            System.out.println("sending data packet");
             try {
                 socket.send(packet);
                 waiting(DATA_TIMER);
