@@ -15,10 +15,19 @@ public class StandardHeader {
     byte[] length;
     byte[] sequenceNumber;
     byte[] flags = new byte[1];
-    int HEADERLENGTH = 13;
+    static int HEADERLENGTH = 13;
+    static int BLOCKLENGTH = 4;
 
     public StandardHeader() {
         super();
+    }
+
+    public static int getBlockLength() {
+        return BLOCKLENGTH;
+    }
+
+    public byte[] getChecksum(byte[] data) {
+        return setChecksum(data);
     }
 
     public byte[] toBytes() {
@@ -26,7 +35,7 @@ public class StandardHeader {
     }
 
     public byte[] intToByteArray(int a) {
-        byte[] ret = new byte[4];
+        byte[] ret = new byte[BLOCKLENGTH];
         ret[3] = (byte) (a & 0xFF);
         ret[2] = (byte) ((a >> 8) & 0xFF);
         ret[1] = (byte) ((a >> 16) & 0xFF);
@@ -34,15 +43,18 @@ public class StandardHeader {
         return ret;
     }
 
-    public void setChecksum(byte[] data) {
+    public byte[] setChecksum(byte[] data) {
+
         MessageDigest md;
         try {
             md = MessageDigest.getInstance("MD5");
             byte[] thedigest = md.digest(data);
-            checkSum = Arrays.copyOfRange(thedigest, 0, 4);
+            this.checkSum = Arrays.copyOfRange(thedigest, 0, 4);
+            return checkSum;
         } catch (NoSuchAlgorithmException e) {
             System.out.println("Checksum failed to compose!");
         }
+        return null;
     }
 
     public void setLength(int a) {
@@ -60,15 +72,12 @@ public class StandardHeader {
 
     private byte[] concat(byte[] flag, byte[] length, byte[] sequenceNumber, byte[] checkSum) {
         int fLen = flag.length;
-        int lLen = length.length;
-        int snLen = sequenceNumber.length;
-        int csLen = checkSum.length;
 
-        byte[] header = new byte[fLen + lLen + snLen + csLen];
+        byte[] header = new byte[fLen + 3*BLOCKLENGTH];
         System.arraycopy(flag, 0, header, 0, fLen);
-        System.arraycopy(length, 0, header, fLen, lLen);
-        System.arraycopy(sequenceNumber, 0, header, fLen + lLen, snLen);
-        System.arraycopy(checkSum, 0, header, fLen + lLen + snLen, csLen);
+        System.arraycopy(length, 0, header, fLen, BLOCKLENGTH);
+        System.arraycopy(sequenceNumber, 0, header, fLen + BLOCKLENGTH, BLOCKLENGTH);
+        System.arraycopy(checkSum, 0, header, fLen + 2*BLOCKLENGTH, BLOCKLENGTH);
         return header;
     }
 }

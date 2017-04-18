@@ -1,6 +1,7 @@
 package com.nedap.university.udpFileServer;
 
 import com.nedap.university.application.FileSplitter;
+import com.nedap.university.protocols.protocol1.Sender1;
 import com.nedap.university.udpFileServer.console.*;
 import com.nedap.university.udpFileServer.incomingPacketHandlers.*;
 import com.nedap.university.udpFileServer.dataHandlers.*;
@@ -20,6 +21,7 @@ import java.util.Map;
  */
 public class UDPFileServer {
 
+    private static final int PROTOCOLID = 1;
     private PacketReceiver packetReceiver;
     private PacketSender packetSender;
     private DatagramSocket zocket;
@@ -82,7 +84,7 @@ public class UDPFileServer {
 
     void handleReceivedPacket(byte[] packet, InetAddress packetAddress) {
         byte[] packetFlags = Arrays.copyOfRange(packet, 0, 1);
-        byte[] data = Arrays.copyOfRange(packet, 13, packet.length);
+        byte[] data = Arrays.copyOfRange(packet, 1, packet.length);
         System.out.println("data length = " + data.length);
 
         for (byte i : allPackets.keySet()) {
@@ -215,17 +217,27 @@ public class UDPFileServer {
         String fileToSend = getLocalFile(fileID);
         printFiles(localFiles);
         System.out.println("Uploading file : " + filePath + "/" + fileToSend);
+        runProtocol(fileID);
 
-
-        PacketSender packetSender = new PacketSender(this, zocket);
-        packetSender.setSendFile(true);
-        packetSender.setFileName(fileToSend);
-        packetSender.setFileSplitter(new FileSplitter());
-        packetSender.run();
 
     }
 
     public String getFilePath() {
         return filePath;
+    }
+
+    public int getProtocol() {
+        return PROTOCOLID;
+    }
+
+    public static int getPort() {
+        return PORT;
+    }
+
+    public void runProtocol(int fileID) {
+        if(PROTOCOLID == 1) {
+            Sender1 sender = new Sender1(zocket, this, localFiles.get(fileID));
+            sender.initiateSender();
+        }
     }
 }

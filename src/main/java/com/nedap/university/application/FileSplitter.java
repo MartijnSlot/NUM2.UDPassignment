@@ -8,7 +8,7 @@ import java.io.FileInputStream;
  */
 public class FileSplitter {
 
-    private static final int PACKETSIZE = 1450;
+    private static final int PACKETSIZE = 1000;
 
     public FileSplitter() {
 

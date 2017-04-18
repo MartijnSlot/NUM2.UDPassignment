@@ -8,7 +8,7 @@ import com.nedap.university.header.StandardHeader;
  */
 public class DataPacket extends StandardPacket {
 
-    private static final int FILE_NAME_BYTES = 50;
+    private static final int FILE_NAME_BYTES = 20;
 
     public DataPacket(){
         super();

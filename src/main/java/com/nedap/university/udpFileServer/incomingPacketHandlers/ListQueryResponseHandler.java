@@ -16,10 +16,13 @@ public class ListQueryResponseHandler implements packetHandler {
 
     @Override
     public void start(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender apekop, byte[] data) {
+
         System.out.println("Received file list from PI");
+        byte [] datafile = new byte[data.length - 12];
+        System.arraycopy(data, 12,datafile,0,data.length - 12);
         Map<Integer, String> fileList = new HashMap<>();
         try {
-            fileList = (Map<Integer, String>) MapToBytesAndBack.deserialize(data);
+            fileList = (Map<Integer, String>) MapToBytesAndBack.deserialize(datafile);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
