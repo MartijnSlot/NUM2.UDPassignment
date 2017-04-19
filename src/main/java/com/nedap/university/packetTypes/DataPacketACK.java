@@ -7,8 +7,6 @@ import com.nedap.university.header.StandardHeader;
  */
 public class DataPacketACK extends StandardPacket {
 
-    private static final int FILE_NAME_BYTES = 20;
-
     public DataPacketACK(){
         super();
     }

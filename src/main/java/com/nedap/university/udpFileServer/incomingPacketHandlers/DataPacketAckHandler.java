@@ -29,7 +29,6 @@ public class DataPacketAckHandler implements PacketHandler {
         int seqNum = ByteBuffer.wrap(seqNumBytes).getInt();
         System.out.println("Received ACK packet with header = " + seqNum);
         receivedAcks.add(seqNum);
-
     }
 
     public Set<Integer> getAcks() {

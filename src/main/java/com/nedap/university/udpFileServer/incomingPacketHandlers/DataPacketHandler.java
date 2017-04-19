@@ -7,22 +7,26 @@ import com.nedap.university.udpFileServer.UDPFileServer;
 
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by martijn.slot on 15/04/2017.
  */
 public class DataPacketHandler implements PacketHandler {
 
-    private static int blocklength = StandardHeader.getBlockLength();
+    private static final int BLOCK_LENGTH = StandardHeader.getBlockLength();
 
-    private byte[] datalength = new byte[blocklength];
-    private byte[] seqNum = new byte[blocklength];
-    private byte[] checkSum = new byte[blocklength];
+    private byte[] datalength = new byte[BLOCK_LENGTH];
+    private byte[] seqNum = new byte[BLOCK_LENGTH];
+    private byte[] checkSum = new byte[BLOCK_LENGTH];
     private byte[] fileNameBytes = new byte[20];
+    private Set<Integer> receivedDataPackets = new HashSet<>();
+
     private FileCompiler fileCompiler = new FileCompiler();
+    private boolean finIsReceived;
+    private int finSequenceNumber;
 
 
     public DataPacketHandler(){
@@ -31,17 +35,15 @@ public class DataPacketHandler implements PacketHandler {
     @Override
     public void initiateHandler(UDPFileServer udpFileServer, InetAddress packetAddress, PacketSender apekop, byte[] data) {
 
-        apekop.setFinishedSending(true);
-        byte[] datafile = new byte[data.length - 3*blocklength];
-        byte[] onlyData = new byte[data.length - (3*blocklength + fileNameBytes.length)];
+        byte[] datafile = new byte[data.length - 3* BLOCK_LENGTH];
+        byte[] onlyData = new byte[data.length - (3* BLOCK_LENGTH + fileNameBytes.length)];
 
-
-        System.arraycopy(data, 0, datalength, 0, blocklength);
-        System.arraycopy(data, 4, seqNum, 0, blocklength);
-        System.arraycopy(data, 8, checkSum, 0, blocklength);
+        System.arraycopy(data, 0, datalength, 0, BLOCK_LENGTH);
+        System.arraycopy(data, 4, seqNum, 0, BLOCK_LENGTH);
+        System.arraycopy(data, 8, checkSum, 0, BLOCK_LENGTH);
         System.arraycopy(data, 12, fileNameBytes, 0, 20);
-        System.arraycopy(data, 12, datafile, 0, data.length - 3*blocklength);
-        System.arraycopy(data, 32, onlyData, 0, data.length - (3*blocklength + fileNameBytes.length));
+        System.arraycopy(data, 12, datafile, 0, data.length - 3* BLOCK_LENGTH);
+        System.arraycopy(data, 32, onlyData, 0, data.length - (3* BLOCK_LENGTH + fileNameBytes.length));
 
         int sequenceNum = ByteBuffer.wrap(seqNum).getInt();
         String fileName = new String(fileNameBytes);
@@ -50,14 +52,40 @@ public class DataPacketHandler implements PacketHandler {
 
         if(checkChecksum(datafile)) {
             System.out.println("Received data packet " + sequenceNum + ", from file " + fileName);
-            udpFileServer.sendAck(sequenceNum);
-            fileCompiler.setFileName(fileName);
-            fileCompiler.setPacketInPacketMap(sequenceNum, byteArrayToIntArray(onlyData));
-            udpFileServer.checkAllAcks(fileCompiler);
+            if(!receivedDataPackets.contains(sequenceNum)) {
+                receivedDataPackets.add(sequenceNum);
+                udpFileServer.sendAck(sequenceNum);
+                fileCompiler.setPacketInPacketMap(sequenceNum, onlyData);
+                if (finIsReceived && allPacketsPresent()) {
+                    System.out.println("Finalizing packets...");
+                    fileCompiler.setFileName(fileName);
+                    udpFileServer.finalizeSendMethod(fileCompiler);
+                }
+
+            }
         } else {
             System.out.println("wat een gekkenhuis, je checksum komt niet overeen voor pakketje : " + sequenceNum);
         }
 
+    }
+
+
+    public void initiateFin(UDPFileServer server, InetAddress packetAddress, PacketSender packetSender, byte[] data) {
+
+        System.arraycopy(data, 4, seqNum, 0, BLOCK_LENGTH);
+        finSequenceNumber = ByteBuffer.wrap(seqNum).getInt();
+        finIsReceived = true;
+        initiateHandler(server, packetAddress, packetSender, data);
+
+    }
+
+    private boolean allPacketsPresent() {
+        for (int index = 1; index <= finSequenceNumber; index++){
+            if (!receivedDataPackets.contains(index)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean checkChecksum(byte[] data) {
@@ -65,15 +93,8 @@ public class DataPacketHandler implements PacketHandler {
         return Arrays.equals(header.getChecksum(data), checkSum);
     }
 
-    private Integer[] byteArrayToIntArray (byte[] byteArray) {
-        IntBuffer intBuf = ByteBuffer.wrap(byteArray).order(ByteOrder.BIG_ENDIAN).asIntBuffer();
-        int[] dataInts = new int[intBuf.remaining()];
-        intBuf.get(dataInts);
-        Integer[] dataIntegers = new Integer[dataInts.length];
-        int i = 0;
-        for (int value : dataInts) {
-            dataIntegers[i++] = value;
-        }
-        return dataIntegers;
+    public Set<Integer> getReceivedDataPackets() {
+        return receivedDataPackets;
     }
+
 }

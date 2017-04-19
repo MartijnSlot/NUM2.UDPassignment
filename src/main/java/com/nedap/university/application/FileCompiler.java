@@ -3,6 +3,7 @@ package com.nedap.university.application;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,25 +13,27 @@ import java.util.Map;
 public class FileCompiler {
 
     private String fileName;
-    private Map<Integer, Integer[]> packetMap = new HashMap<>();
+    private Map<Integer, byte[]> packetMap = new HashMap<>();
 
     public FileCompiler() {
     }
 
     public void glueAndSavePackets(String filePath) {
-        Integer[] fileContents = new Integer[0];
-        int newPacketPosition = 0;
+        byte[] fileContents = new byte[0];
+        int packetPosition = 0;
 
         if (packetMap.size() != 0) {
-            for (int index : packetMap.keySet()) {
-                int datalen = packetMap.get(index).length;
-                System.out.println("joepi");
-                fileContents = Arrays.copyOf(fileContents, newPacketPosition + datalen);
-                System.arraycopy(packetMap.get(index), 0, fileContents, newPacketPosition, datalen);
-                newPacketPosition = newPacketPosition + packetMap.get(index).length;
+            for (int index = 1; index <= packetMap.keySet().size(); index++) {
+                if (packetMap.get(index) != null) {
+                    int datalen = packetMap.get(index).length;
+                    fileContents = Arrays.copyOf(fileContents, packetPosition + datalen);
+                    System.arraycopy(packetMap.get(index), 0, fileContents, packetPosition, datalen);
+                    packetPosition = packetPosition + packetMap.get(index).length;
+                }
             }
-
-            setFileContents(fileContents, filePath);
+            if (Collections.max(packetMap.keySet()) == packetMap.size()) {
+                setFileContents(fileContents, filePath);
+            }
         }
     }
 
@@ -38,11 +41,11 @@ public class FileCompiler {
      * Writes the contents of the fileContents array to the specified file.
      * @param fileContents the contents to write
      */
-    public void setFileContents(Integer[] fileContents, String filePath) {
+    public void setFileContents(byte[] fileContents, String filePath) {
         String filename = fileName;
         File fileToWrite = new File(filePath + "/" + filename);
         try (FileOutputStream fileStream = new FileOutputStream(fileToWrite)) {
-            for (Integer fileContent : fileContents) {
+            for (byte fileContent : fileContents) {
                 fileStream.write(fileContent);
             }
         } catch (Exception e) {
@@ -58,11 +61,11 @@ public class FileCompiler {
         this.fileName = fileName;
     }
 
-    public void setPacketInPacketMap(int fileSeq, Integer[] datafragment) {
+    public void setPacketInPacketMap(int fileSeq, byte[] datafragment) {
         packetMap.put(fileSeq, datafragment);
     }
 
-    public Map<Integer, Integer[]> getPacketMap() {
+    public Map<Integer, byte[]> getPacketMap() {
         return packetMap;
     }
 }

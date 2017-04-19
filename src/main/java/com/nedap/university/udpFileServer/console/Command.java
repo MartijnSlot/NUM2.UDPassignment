@@ -9,7 +9,6 @@ import java.net.DatagramSocket;
  */
 public abstract class Command {
 
-    public String[] splitMessage;
     public UDPFileServer server;
     public DatagramSocket socket;
 

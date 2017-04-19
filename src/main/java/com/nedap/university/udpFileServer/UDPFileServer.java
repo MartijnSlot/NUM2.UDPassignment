@@ -11,10 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.*;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by martijn.slot on 10/04/2017.
@@ -32,7 +29,9 @@ public class UDPFileServer {
     final InetAddress localhost;
     Map<Integer, String> localFiles;
     private DataPacketAckHandler dataPacketAckHandler = new DataPacketAckHandler();
+    private DataPacketHandler dataPacketHandler = new DataPacketHandler();
     private Protocol1 protocol;
+
 
     public UDPFileServer(String filePath) {
         this.filePath = filePath;
@@ -74,7 +73,6 @@ public class UDPFileServer {
         allPackets.put(Byte.parseByte("00000001", 2), MDNS); //int 1
         allPackets.put(Byte.parseByte("00100001", 2), MDNS_ACK); //int 33
         allPackets.put(Byte.parseByte("00000010", 2), FILE_QUERY); //int 2
-        allPackets.put(Byte.parseByte("00100010", 2), FILE_QUERY_ACK); //int 34
         allPackets.put(Byte.parseByte("00000100", 2), FILE_LIST_QUERY); //int 4
         allPackets.put(Byte.parseByte("00100100", 2), FILE_LIST_QUERY_ACK); //int 36
         allPackets.put(Byte.parseByte("00001000", 2), DATA); //int 8
@@ -108,6 +106,8 @@ public class UDPFileServer {
                 }
                 break;
             case FILE_QUERY:
+                PacketHandler fileQueryHandler = new FileQueryHandler();
+                fileQueryHandler.initiateHandler(this, packetAddress, packetSender, packet);
                 break;
             case FILE_LIST_QUERY:
                 PacketHandler fileListQueryHandler = new FileListQueryHandler();
@@ -118,11 +118,13 @@ public class UDPFileServer {
                 listQueryResponseHandler.initiateHandler(this, packetAddress, new PacketSender(this, zocket), packet);
                 break;
             case DATA:
-                PacketHandler dataPacketHandler = new DataPacketHandler();
                 dataPacketHandler.initiateHandler(this, packetAddress, new PacketSender(this, zocket), packet);
                 break;
             case DATA_ACK:
                 dataPacketAckHandler.initiateHandler(this, packetAddress, new PacketSender(this, zocket), packet);
+                break;
+            case DATA_ACK_FIN:
+                dataPacketHandler.initiateFin(this, packetAddress, new PacketSender(this, zocket), packet);
                 break;
             default:
                 System.out.println("No flags have been set. Packet will be dropped.");
@@ -229,34 +231,23 @@ public class UDPFileServer {
         packetReceiver.start();
         protocol.initiateProtocol();
         packetSender.setFinishedSending(true);
-        System.out.println("\n -- GREAT SUCCESS! FILE HAS BEEN TRANSFERRED! -- \n");
+        System.out.println("\n -- GREAT SUCCESS! FILE HAS BEEN SEND! -- \n");
     }
 
     public void sendAck(int seqNum) {
         protocol = new Protocol1(this, dataPacketAckHandler);
         packetSender = new PacketSender(this, zocket, protocol);
-        packetSender.setSendDataAcks(true);
-        packetSender.setSeqNum(seqNum);
-        packetSender.start();
-        try {
-            Thread.sleep(5);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        packetSender.setSendDataAcks(false);
-        packetSender.setFinishedSending(true);
+        packetSender.sendDataAck(seqNum);
     }
 
-    public void checkAllAcks(FileCompiler fileCompiler) {
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-//        if (fileCompiler.getPacketMap().size() == protocol.getReceivedAcks().size()){
-//            packetSender.setFinishedSending(true);
-//            packetReceiver.setFinishedReceiving(true);
+    public void finalizeSendMethod(FileCompiler fileCompiler) {
             fileCompiler.glueAndSavePackets(filePath);
-//        }
+            packetSender.setFinishedSending(true);
+            packetReceiver.setFinishedReceiving(true);
+    }
+
+    public void sendDownReq(int fileID) {
+        packetSender = new PacketSender(this, zocket, protocol);
+        packetSender.sendFileReq(fileID);
     }
 }

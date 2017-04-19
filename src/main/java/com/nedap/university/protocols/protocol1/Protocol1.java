@@ -5,21 +5,23 @@ import com.nedap.university.packetTypes.DataPacket;
 import com.nedap.university.packetTypes.DataPacketACK;
 import com.nedap.university.udpFileServer.UDPFileServer;
 import com.nedap.university.udpFileServer.incomingPacketHandlers.DataPacketAckHandler;
+import com.nedap.university.udpFileServer.incomingPacketHandlers.DataPacketHandler;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by martijn.slot on 18/04/2017.
  */
 public class Protocol1 {
 
-    private static final int WINDOWSIZE = 500;
+    private static final int WINDOWSIZE = 50;
     private final DataPacketAckHandler dataPacketAckHandler;
     private String fileToSend;
     private UDPFileServer server;
     private FileSplitter fileSplitter = new FileSplitter();
     private int seqNumber = 1;
-    private Map<Integer, byte[]> sendData = new HashMap<>();
+    private Map<Integer, byte[]> sendData = new ConcurrentHashMap<>();
     private Set<Integer> receivedAcks = new HashSet<>();
 
     public Protocol1(UDPFileServer server, String fileToSend, DataPacketAckHandler dataPacketAckHandler) {
@@ -41,30 +43,38 @@ public class Protocol1 {
         return sendData;
     }
 
-    public byte[] getDataAck(int seqNum) {
-        return createAckPacket(seqNum);
-    }
-
-    private byte[] createDataPacket(FileSplitter fileSplitter, Integer[] data, int seqNumber) {
+    public byte[] createDataPacket(FileSplitter fileSplitter, byte[] data, int seqNumber) {
         data = fileSplitter.createPacket(seqNumber, data);
         return new DataPacket().createPacket(data, fileToSend, seqNumber);
-
     }
 
-    private byte[] createAckPacket(int seqNumber) {
-        return new DataPacketACK().createPacket(seqNumber);
-
+    public byte[] createDataFinPacket(FileSplitter fileSplitter, byte[] data, int seqNumber) {
+        data = fileSplitter.createPacket(seqNumber, data);
+        return new DataPacket().createFinPacket(data, fileToSend, seqNumber);
     }
 
     private void preparePackagesToSend() {
-        Integer[] datafile = fileSplitter.getFileContents(server.getFilePath() + "/" + fileToSend);
+        byte[] datafile = fileSplitter.getFileContents(server.getFilePath() + "/" + fileToSend);
         int numberOfFragments = datafile.length / fileSplitter.getPacketSize() + 1;
+        Map<Integer, byte[]> sendTemp = new HashMap<>();
         System.out.println("Number of fragments to send int total : " + numberOfFragments);
+        receivedAcks.clear();
+        sendData.clear();
 
         while (receivedAcks.size() != numberOfFragments) {
             int fragmentCounter;
             int lowerbound;
             int upperbound;
+
+            Set<Integer> tempSet = checkForAcks(dataPacketAckHandler);
+
+            for(int i : tempSet) {
+                if (!receivedAcks.contains(i)) {
+                    receivedAcks.add(i);
+                }
+            }
+
+            tempSet.clear();
 
             //define window boundaries for sliding window!
             if (receivedAcks.isEmpty()) {
@@ -79,17 +89,22 @@ public class Protocol1 {
             for (fragmentCounter = lowerbound; fragmentCounter <= upperbound; fragmentCounter++) {
                 if (!receivedAcks.contains(fragmentCounter)) {
                     seqNumber = fragmentCounter;
-                    sendData.put(seqNumber, createDataPacket(fileSplitter, datafile, seqNumber));
+                    if (fragmentCounter == numberOfFragments) {
+                        sendTemp.put(numberOfFragments, createDataFinPacket(fileSplitter, datafile, numberOfFragments));
+                    } else {
+                        sendTemp.put(seqNumber, createDataPacket(fileSplitter, datafile, seqNumber));
+                    }
                 }
             }
+            sendData = new HashMap<>(sendTemp);
+            if (sendTemp.size() != 0) sendTemp.clear();
+
             try {
-                Thread.sleep(1000);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            receivedAcks = checkForAcks(dataPacketAckHandler);
         }
-
     }
 
     // determine lowerbound window size
@@ -119,7 +134,4 @@ public class Protocol1 {
         return dataPacketAckHandler.getAcks();
     }
 
-    public Set<Integer> getReceivedAcks() {
-        return receivedAcks;
-    }
 }

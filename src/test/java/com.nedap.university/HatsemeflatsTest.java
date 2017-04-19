@@ -1,11 +1,17 @@
 package com.nedap.university;
 
+import com.nedap.university.application.FileSplitter;
+import com.nedap.university.protocols.protocol1.Protocol1;
 import com.nedap.university.udpFileServer.UDPFileServer;
 import com.nedap.university.udpFileServer.dataHandlers.MapToBytesAndBack;
+import com.nedap.university.udpFileServer.incomingPacketHandlers.DataPacketAckHandler;
+import com.nedap.university.udpFileServer.incomingPacketHandlers.DataPacketHandler;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import static org.hamcrest.core.Is.is;
@@ -17,6 +23,15 @@ import static org.junit.Assert.assertThat;
  */
 
 public class HatsemeflatsTest {
+
+    private FileSplitter fileSplitter;
+    private UDPFileServer server;
+
+    @Before public void setUp() {
+        fileSplitter = new FileSplitter();
+        server = new UDPFileServer("src/main/resources");
+    }
+
 
     @Test
     public void testHats() {
@@ -42,5 +57,28 @@ public class HatsemeflatsTest {
         }
         assertThat(paardehoofd, is(apekop));
     }
+
+    @Test
+    public void intToBytesTest() {
+        int id = 1;
+
+        byte[] ret = new byte[4];
+        ret[3] = (byte) (id & 0xFF);
+        ret[2] = (byte) ((id >> 8) & 0xFF);
+        ret[1] = (byte) ((id >> 16) & 0xFF);
+        ret[0] = (byte) ((id >> 24) & 0xFF);
+
+
+        int fileID = ByteBuffer.wrap(ret).getInt();
+        assertThat(id, is(fileID));
+    }
+//
+//    @Test
+//    public void testPacket() {
+//        String fileToSend = "test.txt";
+//        Integer[] datafile = fileSplitter.getFileContents(server.getFilePath() + "/" + fileToSend);
+//        Integer[] data = fileSplitter.createPacket(1, datafile);
+//        assertThat(data.length, is(datafile.length));
+//    }
 
 }

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -23,13 +24,11 @@ public class PacketSender extends Thread {
     private boolean sendListQuery;
     private boolean listQueryAck = false;
     private boolean sendListQueryResponse;
-    private int seqNum;
     private boolean finishedSending = false;
     private static final int INITIATION_TIMER = 100;
     private static final int RESPONSE_TIMER = 2000;
-    private static final int DATA_TIMER = 1000;
+    private static final int DATA_TIMER = 500;
     private boolean sendFile;
-    private boolean sendDataAcks;
 
     public PacketSender(UDPFileServer server, DatagramSocket serverSocket) {
         this.server = server;
@@ -65,25 +64,17 @@ public class PacketSender extends Thread {
 
             if (sendFile) {
                 sendDataPacket();
-                waiting(DATA_TIMER);
+                waiting(DATA_TIMER); // wait for incoming acks!
 
             }
 
-            if(sendDataAcks) {
-                sendDataAcks();
-            }
+        }
 
-        }
-        try {
-            Thread.sleep(DATA_TIMER + 100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
-    private void sendDataAcks() {
-        byte [] ackPacket = protocol1.getDataAck(seqNum);
-        if (ackPacket != null) {
+    public void sendDataAck(int sequenceNum) {
+        byte [] ackPacket = new DataPacketACK().createPacket(sequenceNum);
+        if (ackPacket.length != 0) {
             DatagramPacket packet = new DatagramPacket(ackPacket, ackPacket.length, server.externalhost, UDPFileServer.PORT);
             try {
                 socket.send(packet);
@@ -94,14 +85,14 @@ public class PacketSender extends Thread {
 
     }
 
-    private void sendDataPacket() {
+    private synchronized void sendDataPacket() {
         Map<Integer, byte[]> dataToSend = protocol1.getData();
+        waiting(INITIATION_TIMER);
         for (Integer dataPacketID : dataToSend.keySet()) {
             byte [] dataPacket = dataToSend.get(dataPacketID);
             DatagramPacket packet = new DatagramPacket(dataPacket, dataPacket.length, server.externalhost, UDPFileServer.PORT);
             try {
                 socket.send(packet);
-                waiting(50);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -109,6 +100,18 @@ public class PacketSender extends Thread {
     }
 
 
+    public void sendFileReq(int fileID) {
+        byte [] fileReq = new FileQuery().createPacket(fileID);
+        if (fileReq.length != 0) {
+            DatagramPacket packet = new DatagramPacket(fileReq, fileReq.length, server.externalhost, UDPFileServer.PORT);
+            try {
+                System.out.println("Sending File Download request......");
+                socket.send(packet);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     private void sendListQuery() {
         try {
@@ -202,12 +205,5 @@ public class PacketSender extends Thread {
         this.sendFile = sendFile;
     }
 
-    public void setSendDataAcks(boolean sendDataAcks) {
-        this.sendDataAcks = sendDataAcks;
-    }
-
-    public void setSeqNum(int seqNum) {
-        this.seqNum = seqNum;
-    }
 }
 
