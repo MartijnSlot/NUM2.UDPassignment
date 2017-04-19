@@ -9,7 +9,7 @@ import java.io.IOException;
  */
 public class FileSplitter {
 
-    private static final int PACKETSIZE = 1000;
+    private static final int PACKETSIZE = 1400;
 
     public FileSplitter() {
 

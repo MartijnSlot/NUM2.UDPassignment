@@ -27,7 +27,7 @@ public class PacketSender extends Thread {
     private boolean finishedSending = false;
     private static final int INITIATION_TIMER = 100;
     private static final int RESPONSE_TIMER = 2000;
-    private static final int DATA_TIMER = 500;
+    private static final int DATA_TIMER = 10;
     private boolean sendFile;
 
     public PacketSender(UDPFileServer server, DatagramSocket serverSocket) {
@@ -128,17 +128,15 @@ public class PacketSender extends Thread {
         sendListQuery = false;
     }
 
-    private void sendListQueryResponse() {
+    public void sendListQueryResponse() {
         sendListQuery = false;
         try {
-            byte[] fileListQueryResponse = new FileListQueryResponse().createPacket(server.getMapBytes(server.localFiles));
+            byte[] fileListQueryResponse = new FileListQueryResponse().createPacket(server.getMapBytes(server.getFiles()));
             DatagramPacket sendpkt = new DatagramPacket(fileListQueryResponse,
                     fileListQueryResponse.length, server.externalhost, UDPFileServer.PORT);
             System.out.println("Sending File List......");
             socket.send(sendpkt);
-            waiting(RESPONSE_TIMER);
         } catch (IOException e) {
-            e.printStackTrace();
             System.out.println("ERROR: niet zo cool ouwe, list query response packet niet verzonden.");
         }
     }

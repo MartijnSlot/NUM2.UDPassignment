@@ -29,6 +29,9 @@ public class ConsoleInput implements ConsoleCommands {
             case DOWNLOAD:
                 command = new DownloadCommand(splitMessage[1], server);
                 break;
+            case CLOSE:
+                command = new CloseCommand(server);
+                break;
             default:
                 command = new EmptyCommand(server);
                 break;

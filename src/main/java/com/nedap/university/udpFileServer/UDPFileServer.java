@@ -50,6 +50,7 @@ public class UDPFileServer {
         localFiles = getFiles();
 
         humanInput = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("FILEPATH : " + filePath);
 
         packetReceiver = new PacketReceiver(this, zocket);
         packetSender = new PacketSender(this, zocket);
@@ -176,7 +177,7 @@ public class UDPFileServer {
     }
 
     public Map<Integer, String> getFiles() {
-        return GenerateFileListData.getFileMap(filePath);
+        return new GenerateFileListData().getFileMap(filePath);
     }
 
     public void printFiles(Map<Integer, String> fileMap) {
@@ -215,6 +216,7 @@ public class UDPFileServer {
         printFiles(localFiles);
         System.out.println("Uploading file : " + filePath + "/" + fileToSend);
         runProtocol(fileID);
+        localFiles = getFiles();
     }
 
     public String getFilePath() {
@@ -241,9 +243,9 @@ public class UDPFileServer {
     }
 
     public void finalizeSendMethod(FileCompiler fileCompiler) {
-            fileCompiler.glueAndSavePackets(filePath);
-            packetSender.setFinishedSending(true);
-            packetReceiver.setFinishedReceiving(true);
+        fileCompiler.glueAndSavePackets(filePath);
+        localFiles = getFiles();
+        packetSender.setFinishedSending(true);
     }
 
     public void sendDownReq(int fileID) {

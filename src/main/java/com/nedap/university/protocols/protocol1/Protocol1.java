@@ -2,10 +2,8 @@ package com.nedap.university.protocols.protocol1;
 
 import com.nedap.university.application.FileSplitter;
 import com.nedap.university.packetTypes.DataPacket;
-import com.nedap.university.packetTypes.DataPacketACK;
 import com.nedap.university.udpFileServer.UDPFileServer;
 import com.nedap.university.udpFileServer.incomingPacketHandlers.DataPacketAckHandler;
-import com.nedap.university.udpFileServer.incomingPacketHandlers.DataPacketHandler;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,14 +13,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Protocol1 {
 
-    private static final int WINDOWSIZE = 50;
+    private static final int WINDOWSIZE = 500;
+    private static final long SLEEPING_TIME = 20;
     private final DataPacketAckHandler dataPacketAckHandler;
     private String fileToSend;
     private UDPFileServer server;
     private FileSplitter fileSplitter = new FileSplitter();
     private int seqNumber = 1;
     private Map<Integer, byte[]> sendData = new ConcurrentHashMap<>();
-    private Set<Integer> receivedAcks = new HashSet<>();
 
     public Protocol1(UDPFileServer server, String fileToSend, DataPacketAckHandler dataPacketAckHandler) {
         this.server = server;
@@ -58,8 +56,7 @@ public class Protocol1 {
         int numberOfFragments = datafile.length / fileSplitter.getPacketSize() + 1;
         Map<Integer, byte[]> sendTemp = new HashMap<>();
         System.out.println("Number of fragments to send int total : " + numberOfFragments);
-        receivedAcks.clear();
-        sendData.clear();
+        Set<Integer> receivedAcks = new HashSet<>();
 
         while (receivedAcks.size() != numberOfFragments) {
             int fragmentCounter;
@@ -68,12 +65,11 @@ public class Protocol1 {
 
             Set<Integer> tempSet = checkForAcks(dataPacketAckHandler);
 
-            for(int i : tempSet) {
+            for (int i : tempSet) {
                 if (!receivedAcks.contains(i)) {
                     receivedAcks.add(i);
                 }
             }
-
             tempSet.clear();
 
             //define window boundaries for sliding window!
@@ -95,14 +91,20 @@ public class Protocol1 {
                         sendTemp.put(seqNumber, createDataPacket(fileSplitter, datafile, seqNumber));
                     }
                 }
-            }
-            sendData = new HashMap<>(sendTemp);
-            if (sendTemp.size() != 0) sendTemp.clear();
+                sendData = new HashMap<>(sendTemp);
+                if (sendTemp.size() != 0) sendTemp.clear();
 
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                try {
+                    Thread.sleep(SLEEPING_TIME);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                //remove from received acks if some data has not been acked properly
+                if (sendData.size() <= 1) {
+                    for (int key : sendData.keySet()) {
+                        receivedAcks.remove(key);
+                    }
+                }
             }
         }
     }

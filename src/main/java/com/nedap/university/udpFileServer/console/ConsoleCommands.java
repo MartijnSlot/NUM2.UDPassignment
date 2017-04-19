@@ -37,4 +37,9 @@ public interface ConsoleCommands {
      * Delimiter for splitting input
      */
     String DELIMITER = " ";
+
+    /**
+     * for closing threads
+     */
+    String CLOSE = "close";
 }

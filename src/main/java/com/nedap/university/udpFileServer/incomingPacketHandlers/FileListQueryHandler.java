@@ -16,13 +16,6 @@ public class FileListQueryHandler implements PacketHandler {
         apekop.setFinishedSending(true);
         System.out.println("Received List Query");
             PacketSender packetSender = new PacketSender(udpFileServer, udpFileServer.getSocket());
-            packetSender.setSendListQueryResponse(true);
-            packetSender.start();
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            packetSender.setFinishedSending(true);
+            packetSender.sendListQueryResponse();
     }
 }

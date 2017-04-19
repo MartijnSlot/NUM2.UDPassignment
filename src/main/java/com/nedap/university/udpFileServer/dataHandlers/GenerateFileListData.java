@@ -10,7 +10,7 @@ import java.util.Map;
 public class GenerateFileListData {
 
 
-    public static Map<Integer, String> getFileMap(String filePath) {
+    public Map<Integer, String> getFileMap(String filePath) {
         File folder = new File(filePath);
         File[] listOfFiles = folder.listFiles();
         Map<Integer, String> fileMap = new HashMap<>();
