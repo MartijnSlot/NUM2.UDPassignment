@@ -29,7 +29,7 @@ public class PacketReceiver extends Thread {
             while(serverSocket != null && !finishedReceiving) {
                 byte[] receiveData;
                 DatagramPacket packet = new DatagramPacket(buffer, length);
-                System.out.printf("Waiting for next packet on : %s:%d%n", server.localhost.getHostAddress(), server.PORT);
+//                System.out.printf("Waiting for next packet on : %s:%d%n", server.localhost.getHostAddress(), server.PORT);
                 serverSocket.receive(packet);
 
                 receiveData = new byte[packet.getLength()];
@@ -38,15 +38,15 @@ public class PacketReceiver extends Thread {
                 int packetPort = packet.getPort();
                 InetAddress packetAddress = packet.getAddress();
 
-                System.out.printf("Received packet from : %s:%d%n", packetAddress.getHostAddress(), packetPort);
+//                System.out.printf("Received packet from : %s:%d%n", packetAddress.getHostAddress(), packetPort);
 
                 server.handleReceivedPacket(receiveData, packetAddress);
 
-                Thread.sleep(RECEIVER_SLEEP);
+//                Thread.sleep(RECEIVER_SLEEP);
 
             }
 
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

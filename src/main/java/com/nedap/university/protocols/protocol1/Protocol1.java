@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Protocol1 {
 
-    private static final int WINDOWSIZE = 500;
+    private static final int WINDOWSIZE = 1000;
     private static final long SLEEPING_TIME = 20;
     private final DataPacketAckHandler dataPacketAckHandler;
     private String fileToSend;
@@ -94,11 +94,11 @@ public class Protocol1 {
                 sendData = new HashMap<>(sendTemp);
                 if (sendTemp.size() != 0) sendTemp.clear();
 
-                try {
-                    Thread.sleep(SLEEPING_TIME);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    Thread.sleep(SLEEPING_TIME);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
                 //remove from received acks if some data has not been acked properly
                 if (sendData.size() <= 1) {
                     for (int key : sendData.keySet()) {

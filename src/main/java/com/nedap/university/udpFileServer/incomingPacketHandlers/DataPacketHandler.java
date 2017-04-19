@@ -51,7 +51,7 @@ public class DataPacketHandler implements PacketHandler {
         fileName = fileName.toLowerCase();
 
         if(checkChecksum(datafile)) {
-            System.out.println("Received data packet " + sequenceNum + ", from file " + fileName);
+//            System.out.println("Received data packet " + sequenceNum + ", from file " + fileName);
             if(!receivedDataPackets.contains(sequenceNum)) {
                 receivedDataPackets.add(sequenceNum);
                 udpFileServer.sendAck(sequenceNum);

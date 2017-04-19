@@ -72,13 +72,6 @@ public class HatsemeflatsTest {
         int fileID = ByteBuffer.wrap(ret).getInt();
         assertThat(id, is(fileID));
     }
-//
-//    @Test
-//    public void testPacket() {
-//        String fileToSend = "test.txt";
-//        Integer[] datafile = fileSplitter.getFileContents(server.getFilePath() + "/" + fileToSend);
-//        Integer[] data = fileSplitter.createPacket(1, datafile);
-//        assertThat(data.length, is(datafile.length));
-//    }
+
 
 }

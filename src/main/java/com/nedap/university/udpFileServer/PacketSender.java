@@ -64,7 +64,7 @@ public class PacketSender extends Thread {
 
             if (sendFile) {
                 sendDataPacket();
-                waiting(DATA_TIMER); // wait for incoming acks!
+//                waiting(DATA_TIMER); // wait for incoming acks!
 
             }
 
